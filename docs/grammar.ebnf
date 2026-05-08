@@ -1,0 +1,146 @@
+(* ============================================================ *)
+(*  FORMGEN — Gramática EBNF Formal                            *)
+(*  Notación: * = cero o más | + = uno o más | ? = opcional    *)
+(*            | = alternativa | () = agrupación                *)
+(* ============================================================ *)
+
+
+(* ── Regla raíz ─────────────────────────────────────────── *)
+
+program         ::= form_def EOF
+
+(* ── Formulario ──────────────────────────────────────────── *)
+
+form_def        ::= "form" IDENTIFIER form_attr+ NEWLINE
+                    INDENT
+                        section+
+                        on_submit?
+                    DEDENT
+
+form_attr       ::= title_attr
+                  | theme_attr
+                  | submit_attr
+                  | cancel_attr
+                  | layout_attr
+                  | size_attr
+
+title_attr      ::= "title"  "=" STRING
+theme_attr      ::= "theme"  "=" theme_value
+submit_attr     ::= "submit" "=" STRING
+cancel_attr     ::= "cancel" "=" STRING
+layout_attr     ::= "layout" "=" layout_value
+size_attr       ::= "size"   "=" size_value
+
+theme_value     ::= "dark" | "light" | "primary" | "minimal"
+layout_value    ::= "stacked" | "inline" | "grid"
+size_value      ::= "sm" | "md" | "lg"
+
+
+(* ── Sección ─────────────────────────────────────────────── *)
+
+section         ::= "section" IDENTIFIER NEWLINE
+                    INDENT
+                        field+
+                    DEDENT
+
+
+(* ── Campo ───────────────────────────────────────────────── *)
+
+field           ::= "field" IDENTIFIER NEWLINE
+                    INDENT
+                        field_prop+
+                    DEDENT
+
+field_prop      ::= type_prop
+                  | label_prop
+                  | placeholder_prop
+                  | required_prop
+                  | unique_prop
+                  | readonly_prop
+                  | hidden_prop
+                  | default_prop
+                  | min_length_prop
+                  | max_length_prop
+                  | min_prop
+                  | max_prop
+                  | options_prop
+                  | icon_prop
+
+
+(* ── Propiedades de campo ────────────────────────────────── *)
+
+type_prop       ::= "type"        ":" field_type  NEWLINE
+label_prop      ::= "label"       ":" STRING      NEWLINE
+placeholder_prop::= "placeholder" ":" STRING      NEWLINE
+required_prop   ::= "required"                    NEWLINE   (* flag booleano *)
+unique_prop     ::= "unique"      ":" BOOLEAN     NEWLINE
+readonly_prop   ::= "readonly"                    NEWLINE   (* flag booleano *)
+hidden_prop     ::= "hidden"                      NEWLINE   (* flag booleano *)
+default_prop    ::= "default"     ":" value       NEWLINE
+min_length_prop ::= "min_length"  ":" INTEGER     NEWLINE
+max_length_prop ::= "max_length"  ":" INTEGER     NEWLINE
+min_prop        ::= "min"         ":" number      NEWLINE
+max_prop        ::= "max"         ":" number      NEWLINE
+options_prop    ::= "options"     ":" option_list NEWLINE
+icon_prop       ::= "icon"        ":" icon_value  NEWLINE
+
+field_type      ::= "string"   | "email"    | "password"
+                  | "int"      | "float"    | "date"
+                  | "boolean"  | "select"   | "textarea"
+
+icon_value      ::= "person"   | "lock"     | "envelope"
+                  | "phone"    | "calendar" | "search"
+                  | "eye"
+
+option_list     ::= "[" STRING ("," STRING)* "]"
+
+value           ::= STRING | INTEGER | FLOAT | BOOLEAN
+
+number          ::= INTEGER | FLOAT
+
+BOOLEAN         ::= "true" | "false"
+
+
+(* ── Bloque on_submit ────────────────────────────────────── *)
+
+on_submit       ::= "on_submit" NEWLINE
+                    INDENT
+                        http_action
+                        success_clause
+                        error_clause
+                    DEDENT
+
+http_action     ::= http_method URL_PATH NEWLINE
+
+http_method     ::= "POST" | "GET"
+
+success_clause  ::= "success" ":" STRING arrow_action? NEWLINE
+
+error_clause    ::= "error"   ":" STRING NEWLINE
+
+arrow_action    ::= "→" action_type URL_PATH
+
+action_type     ::= "redirect"
+
+
+(* ── Terminales (tokens) ─────────────────────────────────── *)
+
+IDENTIFIER      ::= [a-zA-Z_] [a-zA-Z0-9_]*
+
+STRING          ::= '"' ( [^"\\] | '\\' . )* '"'
+
+INTEGER         ::= [0-9]+
+
+FLOAT           ::= [0-9]+ "." [0-9]+
+
+URL_PATH        ::= "/" ( [a-zA-Z0-9_\-/] )*
+
+NEWLINE         ::= "\n" | "\r\n"
+
+INDENT          ::= <aumento de nivel de indentación>
+
+DEDENT          ::= <disminución de nivel de indentación>
+
+COMMENT         ::= "#" [^\n]* NEWLINE   (* ignorado *)
+
+WS              ::= [ \t]+              (* ignorado dentro de línea *)

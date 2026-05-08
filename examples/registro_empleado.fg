@@ -1,0 +1,18 @@
+form RegistroEmpleado title="Nuevo Empleado" theme="dark" submit="Crear Empleado"
+  section DatosPersonales
+    field nombre
+      type: string
+      label: "Nombre completo"
+      required
+      min_length: 3
+      max_length: 80
+      placeholder: "Juan Pérez"
+    field email
+      type: email
+      label: "Correo electrónico"
+      required
+      unique: true
+  on_submit
+    POST /api/empleados
+    success: "Empleado registrado correctamente" → redirect /lista
+    error: "mostrar mensaje"

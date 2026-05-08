@@ -1,0 +1,66 @@
+form RegistroCompleto title="Sistema de Registro" theme="primary" layout="grid" size="md" submit="Enviar" cancel="Cancelar"
+  section DatosPersonales
+    field nombre
+      type: string
+      label: "Nombre completo"
+      required
+      min_length: 3
+      max_length: 80
+      placeholder: "Juan Pérez"
+      icon: person
+    field email
+      type: email
+      label: "Correo electrónico"
+      required
+      unique: true
+      icon: envelope
+    field password
+      type: password
+      label: "Contraseña"
+      required
+      min_length: 8
+      icon: lock
+    field fecha_nacimiento
+      type: date
+      label: "Fecha de nacimiento"
+      required
+      icon: calendar
+  section DatosLaborales
+    field puesto
+      type: select
+      label: "Puesto"
+      required
+      options: ["Desarrollador", "Diseñador", "Analista", "Gerente"]
+    field salario
+      type: float
+      label: "Salario mensual"
+      min: 1000.00
+      max: 99999.99
+    field edad
+      type: int
+      label: "Edad"
+      min: 18
+      max: 65
+    field descripcion
+      type: textarea
+      label: "Descripción del perfil"
+      max_length: 500
+      placeholder: "Describe tu experiencia..."
+  section Configuracion
+    field activo
+      type: boolean
+      label: "Cuenta activa"
+      default: true
+    field readonly_field
+      type: string
+      label: "Código de empleado"
+      readonly
+      default: "EMP-000"
+    field interno
+      type: string
+      label: "Notas internas"
+      hidden
+  on_submit
+    POST /api/registro
+    success: "Registro exitoso" → redirect /dashboard
+    error: "Error al registrar"
