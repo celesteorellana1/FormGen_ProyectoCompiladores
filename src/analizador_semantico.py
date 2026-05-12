@@ -4,9 +4,9 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'generated'))
 
 from antlr4 import CommonTokenStream, FileStream, ParseTreeWalker
-from generated.FormGenLexer import FormGenLexer
-from generated.FormGenParser import FormGenParser
-from generated.FormGenParserListener import FormGenParserListener
+from src.generated.FormGenLexer import FormGenLexer
+from src.generated.FormGenParser import FormGenParser
+from src.generated.FormGenParserListener import FormGenParserListener
 
 
 VALID_PROPS_BY_TYPE = {
