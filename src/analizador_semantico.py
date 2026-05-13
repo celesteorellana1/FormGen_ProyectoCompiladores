@@ -4,9 +4,9 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'generated'))
 
 from antlr4 import CommonTokenStream, FileStream, ParseTreeWalker
-from generated.FormGenLexer import FormGenLexer
-from generated.FormGenParser import FormGenParser
-from generated.FormGenParserListener import FormGenParserListener
+from src.generated.FormGenLexer import FormGenLexer
+from src.generated.FormGenParser import FormGenParser
+from src.generated.FormGenParserListener import FormGenParserListener
 
 
 VALID_PROPS_BY_TYPE = {
@@ -66,6 +66,9 @@ class FieldInfo:
         self.is_hidden = False
         self.is_readonly = False
         self.is_required = False
+        self.label = None
+        self.placeholder = None
+        self.icon = None
 
 
 class FormInfo:
@@ -92,7 +95,7 @@ class SemanticError:
         self.message = message
 
     def __str__(self):
-        return f"   [Línea {self.line}] ERROR: {self.message}"
+        return f"  ❌ [Línea {self.line}] ERROR: {self.message}"
 
 
 class SemanticWarning:
@@ -101,7 +104,7 @@ class SemanticWarning:
         self.message = message
 
     def __str__(self):
-        return f"    [Línea {self.line}] ADVERTENCIA: {self.message}"
+        return f"  ⚠️  [Línea {self.line}] ADVERTENCIA: {self.message}"
 
 
 class SemanticAnalyzer(FormGenParserListener):
@@ -327,6 +330,12 @@ class SemanticAnalyzer(FormGenParserListener):
                 elif v.boolean_val():
                     f.default_val = v.boolean_val().getText()
                     f.default_val_kind = 'boolean'
+        elif prop_name == 'label':
+            if ctx.STRING():
+                f.label = self._strip_quotes(ctx.STRING().getText())
+        elif prop_name == 'placeholder':
+            if ctx.STRING():
+                f.placeholder = self._strip_quotes(ctx.STRING().getText())
         elif prop_name == 'options':
             if ctx.option_list():
                 strings = ctx.option_list().STRING()
@@ -341,6 +350,8 @@ class SemanticAnalyzer(FormGenParserListener):
                 icon = ctx.icon_value().getText()
                 if icon not in VALID_ICONS:
                     self._error(ctx, f"Ícono desconocido: '{icon}' en campo '{f.name}'. Válidos: {sorted(VALID_ICONS)}.")
+                else:
+                    f.icon = icon
 
 
 def analyze(filepath: str) -> dict:
@@ -387,7 +398,7 @@ def print_report(result: dict, filepath: str):
         for e in result['errors']:
             print(str(e))
     else:
-        print("   Sin errores semánticos")
+        print("  ✅ Sin errores semánticos")
 
     print()
     if result['warnings']:
@@ -395,10 +406,10 @@ def print_report(result: dict, filepath: str):
         for w in result['warnings']:
             print(str(w))
     else:
-        print("   Sin advertencias")
+        print("  ✅ Sin advertencias")
 
     print()
-    print(f"  Estado: {' VÁLIDO' if result['ok'] else ' INVÁLIDO'}")
+    print(f"  Estado: {'✅ VÁLIDO' if result['ok'] else '❌ INVÁLIDO'}")
     print("=" * 60)
 
 
