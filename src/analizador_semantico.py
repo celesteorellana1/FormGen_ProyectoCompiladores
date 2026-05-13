@@ -4,9 +4,9 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'generated'))
 
 from antlr4 import CommonTokenStream, FileStream, ParseTreeWalker
-from src.generated.FormGenLexer import FormGenLexer
-from src.generated.FormGenParser import FormGenParser
-from src.generated.FormGenParserListener import FormGenParserListener
+from generated.FormGenLexer import FormGenLexer
+from generated.FormGenParser import FormGenParser
+from generated.FormGenParserListener import FormGenParserListener
 
 
 VALID_PROPS_BY_TYPE = {
@@ -92,7 +92,7 @@ class SemanticError:
         self.message = message
 
     def __str__(self):
-        return f"  ❌ [Línea {self.line}] ERROR: {self.message}"
+        return f"   [Línea {self.line}] ERROR: {self.message}"
 
 
 class SemanticWarning:
@@ -101,7 +101,7 @@ class SemanticWarning:
         self.message = message
 
     def __str__(self):
-        return f"  ⚠️  [Línea {self.line}] ADVERTENCIA: {self.message}"
+        return f"    [Línea {self.line}] ADVERTENCIA: {self.message}"
 
 
 class SemanticAnalyzer(FormGenParserListener):
@@ -387,7 +387,7 @@ def print_report(result: dict, filepath: str):
         for e in result['errors']:
             print(str(e))
     else:
-        print("  ✅ Sin errores semánticos")
+        print("   Sin errores semánticos")
 
     print()
     if result['warnings']:
@@ -395,10 +395,10 @@ def print_report(result: dict, filepath: str):
         for w in result['warnings']:
             print(str(w))
     else:
-        print("  ✅ Sin advertencias")
+        print("   Sin advertencias")
 
     print()
-    print(f"  Estado: {'✅ VÁLIDO' if result['ok'] else '❌ INVÁLIDO'}")
+    print(f"  Estado: {' VÁLIDO' if result['ok'] else ' INVÁLIDO'}")
     print("=" * 60)
 
 
