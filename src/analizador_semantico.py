@@ -4,9 +4,9 @@ import os
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'generated'))
 
 from antlr4 import CommonTokenStream, FileStream, ParseTreeWalker
-from src.generated.FormGenLexer import FormGenLexer
-from src.generated.FormGenParser import FormGenParser
-from src.generated.FormGenParserListener import FormGenParserListener
+from generated.FormGenLexer import FormGenLexer
+from generated.FormGenParser import FormGenParser
+from generated.FormGenParserListener import FormGenParserListener
 
 
 VALID_PROPS_BY_TYPE = {
@@ -117,6 +117,7 @@ class SemanticAnalyzer(FormGenParserListener):
         self._current_field = None
         self._field_names_in_section = set()
         self._section_names = set()
+        self.on_submit = None
 
     def _error(self, ctx, msg):
         line = ctx.start.line if hasattr(ctx, 'start') else 0
@@ -353,6 +354,40 @@ class SemanticAnalyzer(FormGenParserListener):
                 else:
                     f.icon = icon
 
+    def enterOn_submit(self, ctx: FormGenParser.On_submitContext):
+        self.on_submit = {
+            "method": None,
+            "url": None,
+            "success_msg": None,
+            "error_msg": None,
+            "success_action": None,
+            "success_url": None,
+        }
+
+    def enterHttp_action(self, ctx: FormGenParser.Http_actionContext):
+        if self.on_submit is None:
+            self.on_submit = {}
+        if ctx.http_method():
+            self.on_submit["method"] = ctx.http_method().getText()
+        if ctx.URL_PATH():
+            self.on_submit["url"] = ctx.URL_PATH().getText()
+
+    def enterSuccess_clause(self, ctx: FormGenParser.Success_clauseContext):
+        if self.on_submit is None:
+            self.on_submit = {}
+        if ctx.STRING():
+            self.on_submit["success_msg"] = self._strip_quotes(ctx.STRING().getText())
+        arrow = ctx.arrow_action()
+        if arrow and arrow.URL_PATH():
+            self.on_submit["success_action"] = "redirect"
+            self.on_submit["success_url"] = arrow.URL_PATH().getText()
+
+    def enterError_clause(self, ctx: FormGenParser.Error_clauseContext):
+        if self.on_submit is None:
+            self.on_submit = {}
+        if ctx.STRING():
+            self.on_submit["error_msg"] = self._strip_quotes(ctx.STRING().getText())
+
 
 def analyze(filepath: str) -> dict:
     input_stream = FileStream(filepath, encoding='utf-8')
@@ -378,6 +413,7 @@ def analyze(filepath: str) -> dict:
         'errors': analyzer.errors,
         'warnings': analyzer.warnings,
         'form': analyzer._form,
+        'on_submit': analyzer.on_submit,
     }
 
 

@@ -1,0 +1,8 @@
+__pycache__/
+*.pyc
+output/
+src/*_api/
+src/tmp_*.js
+src/formulario_completo.js
+src/generated/__pycache__/
+src/tmp_*_api.py
