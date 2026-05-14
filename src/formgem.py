@@ -7,6 +7,7 @@ sys.path.insert(0, src_dir)
 
 from analizador_semantico import analyze, print_report
 from generador_js import generate
+from generador_fastapi import generate_fastapi_project
 
 
 BANNER = """
@@ -16,7 +17,13 @@ BANNER = """
 """
 
 
-def procesar(filepath: str, output: str = None, solo_validar: bool = False):
+def procesar(
+    filepath: str,
+    output: str = None,
+    solo_validar: bool = False,
+    generar_fastapi: bool = False,
+    con_modelo_db: bool = False
+):
     if not os.path.isfile(filepath):
         print(f" Archivo no encontrado: {filepath}")
         return False
@@ -71,6 +78,42 @@ def procesar(filepath: str, output: str = None, solo_validar: bool = False):
         print(f"   Secciones           : {len(form.sections)}")
         print(f"   Campos totales      : {total_campos}")
 
+    if generar_fastapi:
+        print()
+        print("-" * 60)
+        print("  FASE 3 — Generación de Backend FastAPI")
+        print("-" * 60)
+        try:
+            api_files = generate_fastapi_project(result, filepath, include_db_model=con_modelo_db)
+        except ValueError as e:
+            print(f"\n Error en la generación FastAPI: {e}")
+            return False
+
+        if output:
+            base_name = os.path.splitext(os.path.basename(output))[0]
+            out_dir = os.path.dirname(os.path.abspath(output))
+        else:
+            base_name = os.path.splitext(os.path.basename(filepath))[0]
+            out_dir   = os.path.dirname(os.path.abspath(filepath))
+        api_dir = os.path.join(out_dir, base_name + "_api")
+
+        try:
+            os.makedirs(api_dir, exist_ok=True)
+            for rel_path, content in api_files.items():
+                full_path = os.path.join(api_dir, rel_path)
+                os.makedirs(os.path.dirname(full_path), exist_ok=True)
+                with open(full_path, "w", encoding="utf-8") as f:
+                    f.write(content)
+        except OSError as e:
+            print(f"\n No se pudo escribir el backend FastAPI: {e}")
+            return False
+
+        total_lines = sum(c.count(chr(10)) for c in api_files.values())
+        print(f"\n   Carpeta API generada: {api_dir}")
+        print(f"   Archivos generados  : {len(api_files)}")
+        print(f"   Líneas generadas    : {total_lines}")
+        print(f"   Modelo DB opcional  : {'sí' if con_modelo_db else 'no'}")
+
     print("-" * 60)
     return True
 
@@ -85,6 +128,8 @@ Ejemplos:
   python formgem.py examples/formulario_completo.fg
   python formgem.py examples/registro_empleado.fg -o mi_form.js
   python formgem.py examples/formulario_completo.fg --solo-validar
+  python formgem.py examples/formulario_completo.fg --generar-fastapi
+  python formgem.py examples/formulario_completo.fg --generar-fastapi --con-modelo-db
   python formgem.py form1.fg form2.fg form3.fg
         """,
     )
@@ -92,6 +137,10 @@ Ejemplos:
     parser.add_argument("-o", "--output", help="Archivo .js de salida (solo con un .fg)")
     parser.add_argument("--solo-validar", action="store_true",
                         help="Solo análisis semántico, sin generar JS")
+    parser.add_argument("--generar-fastapi", action="store_true",
+                        help="Genera backend FastAPI en Python")
+    parser.add_argument("--con-modelo-db", action="store_true",
+                        help="Incluye modelo de base de datos (SQLAlchemy) en el backend generado")
 
     args = parser.parse_args()
 
@@ -101,7 +150,13 @@ Ejemplos:
 
     hubo_errores = False
     for filepath in args.archivos:
-        ok = procesar(filepath, output=args.output, solo_validar=args.solo_validar)
+        ok = procesar(
+            filepath,
+            output=args.output,
+            solo_validar=args.solo_validar,
+            generar_fastapi=args.generar_fastapi,
+            con_modelo_db=args.con_modelo_db,
+        )
         if not ok:
             hubo_errores = True
         print()
