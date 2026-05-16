@@ -1,7 +1,7 @@
 import os
 from jinja2 import Environment, FileSystemLoader
-from src.analizador_semantico import analyze
-from src.generator.bootstrap_map import (
+from analizador_semantico import analyze
+from generator.bootstrap_map import (
     FIELD_TYPE_MAP,
     FIELD_CLASS_MAP,
     LABEL_CLASS,
@@ -114,7 +114,7 @@ def generate_html(form, output_file="output/index.html"):
 
 
 if __name__ == "__main__":
-    input_file = "examples/formulario_completo.fg"
+    input_file = "examples/registro_empleado.fg"
     # input_file = "examples/registro_empleado.fg"
 
     result = analyze(input_file)
