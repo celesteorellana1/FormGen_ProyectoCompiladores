@@ -1,0 +1,442 @@
+{% macro theme_classes(theme) %}
+  {%- if theme == 'dark' -%}bg-dark text-white
+  {%- elif theme == 'light' -%}bg-light text-dark
+  {%- elif theme == 'primary' -%}bg-primary text-white
+  {%- else -%}bg-white text-dark
+  {%- endif -%}
+{% endmacro %}
+
+{% macro size_class(size, kind='input') %}
+  {%- if kind == 'input' -%}
+    {%- if size == 'sm' -%}form-control-sm
+    {%- elif size == 'lg' -%}form-control-lg
+    {%- endif -%}
+  {%- elif kind == 'btn' -%}
+    {%- if size == 'sm' -%}btn-sm
+    {%- elif size == 'lg' -%}btn-lg
+    {%- endif -%}
+  {%- endif -%}
+{% endmacro %}
+
+{% macro icon_class(icon_key) %}
+  {%- set icons = {
+      'person':   'bi-person',
+      'lock':     'bi-lock',
+      'envelope': 'bi-envelope',
+      'phone':    'bi-telephone',
+      'calendar': 'bi-calendar',
+      'search':   'bi-search',
+      'eye':      'bi-eye'
+  } -%}
+  {{ icons.get(icon_key, '') }}
+{% endmacro %}
+
+{% macro render_input(field, form) %}
+  {%- set type_map = {
+      'string':   'text',
+      'email':    'email',
+      'password': 'password',
+      'int':      'number',
+      'float':    'number',
+      'date':     'date'
+  } -%}
+  {%- set html_type = type_map.get(field.field_type, 'text') -%}
+  {%- set sz = size_class(form.size, 'input') | trim -%}
+  {%- set ctrl_class = 'form-control' ~ (' ' ~ sz if sz else '') -%}
+
+  <input
+    type="{{ html_type }}"
+    class="{{ ctrl_class }}{% if field.is_readonly %} bg-secondary bg-opacity-10{% endif %}"
+    id="{{ field.name }}"
+    name="{{ field.name }}"
+    {%- if field.placeholder %} placeholder="{{ field.placeholder }}"{% endif %}
+    {%- if field.default_val is not none %} value="{{ field.default_val }}"{% endif %}
+    {%- if field.is_required %} required{% endif %}
+    {%- if field.is_readonly %} readonly{% endif %}
+    {%- if field.is_hidden %} hidden{% endif %}
+    {%- if field.min_length is not none %} minlength="{{ field.min_length }}"{% endif %}
+    {%- if field.max_length is not none %} maxlength="{{ field.max_length }}"{% endif %}
+    {%- if field.min_val is not none %} min="{{ field.min_val | int if field.field_type == 'int' else field.min_val }}"{% endif %}
+    {%- if field.max_val is not none %} max="{{ field.max_val | int if field.field_type == 'int' else field.max_val }}"{% endif %}
+    {%- if field.field_type == 'float' %} step="0.01"{% endif %}
+  >
+{% endmacro %}
+
+{% macro render_select(field, form) %}
+  {%- set sz = size_class(form.size, 'input') | trim -%}
+  {%- set ctrl_class = 'form-select' ~ (' ' ~ sz if sz else '') -%}
+
+  <select
+    class="{{ ctrl_class }}"
+    id="{{ field.name }}"
+    name="{{ field.name }}"
+    {%- if field.is_required %} required{% endif %}
+    {%- if field.is_readonly %} disabled{% endif %}
+    {%- if field.is_hidden %} hidden{% endif %}
+  >
+    <option value="" disabled {% if not field.default_val %}selected{% endif %}>
+      {{ field.placeholder if field.placeholder else '— Seleccionar —' }}
+    </option>
+    {%- for opt in field.options %}
+    <option value="{{ opt }}"
+      {%- if field.default_val == opt %} selected{% endif %}>
+      {{ opt }}
+    </option>
+    {%- endfor %}
+  </select>
+{% endmacro %}
+
+{% macro render_textarea(field, form) %}
+  {%- set sz = size_class(form.size, 'input') | trim -%}
+  {%- set ctrl_class = 'form-control' ~ (' ' ~ sz if sz else '') -%}
+
+  <textarea
+    class="{{ ctrl_class }}"
+    id="{{ field.name }}"
+    name="{{ field.name }}"
+    rows="4"
+    {%- if field.placeholder %} placeholder="{{ field.placeholder }}"{% endif %}
+    {%- if field.is_required %} required{% endif %}
+    {%- if field.is_readonly %} readonly{% endif %}
+    {%- if field.is_hidden %} hidden{% endif %}
+    {%- if field.min_length is not none %} minlength="{{ field.min_length }}"{% endif %}
+    {%- if field.max_length is not none %} maxlength="{{ field.max_length }}"{% endif %}
+  >{{ field.default_val if field.default_val else '' }}</textarea>
+  {%- if field.max_length %}
+  <div class="form-text">Máximo {{ field.max_length }} caracteres.</div>
+  {%- endif %}
+{% endmacro %}
+
+{% macro render_checkbox(field) %}
+  <div class="form-check">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      id="{{ field.name }}"
+      name="{{ field.name }}"
+      value="true"
+      {%- if field.default_val in ('true', True, 'True') %} checked{% endif %}
+      {%- if field.is_required %} required{% endif %}
+      {%- if field.is_readonly %} disabled{% endif %}
+      {%- if field.is_hidden %} hidden{% endif %}
+    >
+    <label class="form-check-label" for="{{ field.name }}">
+      {{ field.label if field.label else field.name }}
+    </label>
+  </div>
+{% endmacro %}
+
+{% macro render_field(field, form) %}
+  {%- if field.is_hidden %}
+    
+    <input type="hidden" name="{{ field.name }}"
+      {%- if field.default_val is not none %} value="{{ field.default_val }}"{% endif %}>
+  {%- elif field.field_type == 'boolean' %}
+    <div class="mb-3">
+      {{ render_checkbox(field) }}
+    </div>
+  {%- else %}
+    <div class="mb-3">
+      
+      {%- if field.label %}
+      <label for="{{ field.name }}" class="form-label fw-semibold">
+        {{ field.label }}
+        {%- if field.is_required %}
+          <span class="text-danger ms-1" title="Requerido">*</span>
+        {%- endif %}
+      </label>
+      {%- endif %}
+
+      
+      {%- if field.icon %}
+        {%- set ic = icon_class(field.icon) | trim %}
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="bi {{ ic }}"></i>
+          </span>
+          {%- if field.field_type == 'select' %}
+            {{ render_select(field, form) }}
+          {%- elif field.field_type == 'textarea' %}
+            {{ render_textarea(field, form) }}
+          {%- else %}
+            {{ render_input(field, form) }}
+          {%- endif %}
+        </div>
+      {%- else %}
+        {%- if field.field_type == 'select' %}
+          {{ render_select(field, form) }}
+        {%- elif field.field_type == 'textarea' %}
+          {{ render_textarea(field, form) }}
+        {%- else %}
+          {{ render_input(field, form) }}
+        {%- endif %}
+      {%- endif %}
+
+      
+      <div class="invalid-feedback">
+        {%- if field.min_length and field.max_length %}
+          Entre {{ field.min_length }} y {{ field.max_length }} caracteres.
+        {%- elif field.min_length %}
+          Mínimo {{ field.min_length }} caracteres.
+        {%- elif field.max_length %}
+          Máximo {{ field.max_length }} caracteres.
+        {%- else %}
+          Este campo es inválido.
+        {%- endif %}
+      </div>
+    </div>
+  {%- endif %}
+{% endmacro %}
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ form.title if form.title else form.name }}</title>
+
+  
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous">
+
+  
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    rel="stylesheet">
+
+  <style>
+    body { min-height: 100vh; }
+
+    .fg-section-card {
+      border-radius: .75rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    }
+
+    body.bg-dark .form-control,
+    body.bg-dark .form-select {
+      background-color: #2b2b2b;
+      color: #f8f9fa;
+      border-color: #555;
+    }
+    body.bg-dark .form-control:focus,
+    body.bg-dark .form-select:focus {
+      background-color: #333;
+      color: #fff;
+      border-color: #86b7fe;
+      box-shadow: 0 0 0 .25rem rgba(13,110,253,.25);
+    }
+    body.bg-dark .input-group-text {
+      background-color: #3a3a3a;
+      color: #adb5bd;
+      border-color: #555;
+    }
+    body.bg-dark .form-label  { color: #dee2e6; }
+    body.bg-dark .form-text   { color: #adb5bd; }
+    body.bg-dark .fg-section-card { background-color: #1e1e1e !important; }
+
+    body.bg-primary .form-control,
+    body.bg-primary .form-select {
+      background-color: #fff;
+      color: #212529;
+    }
+
+    #fg-toast-container { z-index: 1100; }
+  </style>
+</head>
+
+{%- set body_theme = theme_classes(form.theme) | trim %}
+<body class="{{ body_theme }} py-5">
+
+<div class="container">
+
+  
+  <div class="row justify-content-center mb-4">
+    <div class="col-lg-8 text-center">
+      <h1 class="display-6 fw-bold">
+        {{ form.title if form.title else form.name }}
+      </h1>
+    </div>
+  </div>
+
+  
+  <div id="fg-toast-container" class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="fg-toast" class="toast align-items-center border-0" role="alert" aria-live="assertive">
+      <div class="d-flex">
+        <div class="toast-body fw-semibold" id="fg-toast-msg"></div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  
+  {%- set is_grid   = form.layout == 'grid' %}
+  {%- set is_inline = form.layout == 'inline' %}
+  {%- set sz_btn    = size_class(form.size, 'btn') | trim %}
+  {%- set btn_class = 'btn btn-success' ~ (' ' ~ sz_btn if sz_btn else '') %}
+  {%- set cnl_class = 'btn btn-outline-secondary' ~ (' ' ~ sz_btn if sz_btn else '') %}
+
+  <form
+    id="fg-form"
+    class="needs-validation{% if is_inline %} row row-cols-lg-auto g-3 align-items-end{% endif %}"
+    novalidate
+  >
+
+    {%- for section in form.sections %}
+    <div class="row justify-content-center mb-4">
+      <div class="col-lg-8">
+        <div class="card fg-section-card
+          {%- if form.theme == 'dark' %} bg-dark border-secondary
+          {%- elif form.theme == 'primary' %} bg-white text-dark
+          {%- else %} bg-white
+          {%- endif %}">
+
+          
+          <div class="card-header
+            {%- if form.theme == 'dark' %} bg-secondary bg-opacity-25 text-white
+            {%- elif form.theme == 'primary' %} bg-primary text-white
+            {%- else %} bg-light
+            {%- endif %} fw-semibold fs-6">
+            <i class="bi bi-layout-text-window-reverse me-2 opacity-75"></i>
+            {{ section.name | section_title }}
+          </div>
+
+          <div class="card-body p-4">
+            {%- if is_grid %}
+            <div class="row g-3">
+              {%- for field in section.fields %}
+              <div class="col-md-6">
+                {{ render_field(field, form) }}
+              </div>
+              {%- endfor %}
+            </div>
+
+            {%- elif is_inline %}
+            <div class="row row-cols-lg-auto g-2 align-items-end flex-wrap">
+              {%- for field in section.fields %}
+              <div class="col-auto flex-fill">
+                {{ render_field(field, form) }}
+              </div>
+              {%- endfor %}
+            </div>
+
+            {%- else %}
+            {%- for field in section.fields %}
+              {{ render_field(field, form) }}
+            {%- endfor %}
+            {%- endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+    {%- endfor %}
+
+    
+    <div class="row justify-content-center">
+      <div class="col-lg-8 d-flex gap-2 justify-content-end">
+        {%- if form.cancel_label %}
+        <button type="button" class="{{ cnl_class }}" id="fg-btn-cancel">
+          <i class="bi bi-x-circle me-1"></i>{{ form.cancel_label }}
+        </button>
+        {%- endif %}
+        <button type="submit" class="{{ btn_class }}" id="fg-btn-submit">
+          <span class="spinner-border spinner-border-sm me-2 d-none" id="fg-spinner"></span>
+          <i class="bi bi-send me-1"></i>
+          {{ form.submit_label if form.submit_label else 'Enviar' }}
+        </button>
+      </div>
+    </div>
+
+  </form>
+</div>
+
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmq4kOTBHPcXSHx7LzRuOcuztKA"
+  crossorigin="anonymous"></script>
+
+{%- if form.js_filename %}
+<script src="{{ form.js_filename }}"></script>
+{%- endif %}
+
+<script>
+(function () {
+  'use strict';
+
+  const form      = document.getElementById('fg-form');
+  const spinner   = document.getElementById('fg-spinner');
+  const submitBtn = document.getElementById('fg-btn-submit');
+
+  // showToast expuesto globalmente para que el JS externo (validaciones) pueda usarlo
+  window.showToast = function(msg, isError) {
+    const toastEl  = document.getElementById('fg-toast');
+    const toastMsg = document.getElementById('fg-toast-msg');
+    toastMsg.textContent = msg;
+    toastEl.classList.remove('text-bg-success', 'text-bg-danger');
+    toastEl.classList.add(isError ? 'text-bg-danger' : 'text-bg-success');
+    bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 4000 }).show();
+  };
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!form.checkValidity()) {
+      form.classList.add('was-validated');
+      return;
+    }
+
+    spinner.classList.remove('d-none');
+    submitBtn.disabled = true;
+
+    const formData = Object.fromEntries(new FormData(form).entries());
+
+    try {
+      {%- if form.submit_method and form.submit_action %}
+      const res = await fetch('{{ form.submit_action }}', {
+        method:  '{{ form.submit_method }}',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        window.showToast('{{ form.success_msg if form.success_msg else "Formulario enviado correctamente." }}', false);
+        {%- if form.success_redirect %}
+        setTimeout(() => { window.location.href = '{{ form.success_redirect }}'; }, 1500);
+        {%- endif %}
+      } else {
+        window.showToast('{{ form.error_msg if form.error_msg else "Ocurrió un error. Inténtalo de nuevo." }}', true);
+      }
+      {%- else %}
+      console.log('FormGen – datos del formulario:', formData);
+      window.showToast('Formulario válido (sin endpoint configurado).', false);
+      {%- endif %}
+
+    } catch (err) {
+      window.showToast('Error de red: ' + err.message, true);
+    } finally {
+      spinner.classList.add('d-none');
+      submitBtn.disabled = false;
+    }
+  });
+
+  {%- if form.cancel_label %}
+  document.getElementById('fg-btn-cancel')
+    .addEventListener('click', () => {
+      if (confirm('¿Deseas cancelar? Los cambios no se guardarán.')) {
+        form.reset();
+        form.classList.remove('was-validated');
+      }
+    });
+  {%- endif %}
+
+  {%- if form.js_filename %}
+  activar{{ form.name }}(form);
+  {%- endif %}
+})();
+</script>
+
+</body>
+</html>

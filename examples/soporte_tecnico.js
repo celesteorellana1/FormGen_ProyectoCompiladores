@@ -1,20 +1,11 @@
-// Generado automáticamente por FormGem — fuente: registro_empleado.fg
-// Formulario: RegistroEmpleado
-// NO editar manualmente — regenerar desde el .fg
-
-// ── Validadores genéricos reutilizables ─────────────────────
-
 function _validar_helper_1(value) {
   const v = (value ?? "").toString().trim();
   if (!v) return "Este campo es requerido";
   return null;
 }
 
-// ── Validaciones por campo ───────────────────────────────────
-
 const validaciones = {
 
-  // Sección: DatosPersonales
   nombre(value) {
     { const _e = _validar_helper_1(value); if (_e) return _e; }
     if ((value ?? "").toString().trim().length < 3) return "Mínimo 3 caracteres";
@@ -29,12 +20,51 @@ const validaciones = {
     return null;
   },
 
+  telefono(value) {
+    if ((value ?? "").toString().trim().length < 8) return "Mínimo 8 caracteres";
+    if ((value ?? "").toString().trim().length > 15) return "Máximo 15 caracteres";
+    return null;
+  },
+
+  categoria(value) {
+    { const _e = _validar_helper_1(value); if (_e) return _e; }
+    const _opts = ["Hardware", "Software", "Red", "Cuenta", "Otro"];
+    if (value && !_opts.includes(value)) return "Opción no válida";
+    return null;
+  },
+
+  prioridad(value) {
+    { const _e = _validar_helper_1(value); if (_e) return _e; }
+    const _opts = ["Baja", "Media", "Alta", "Crítica"];
+    if (value && !_opts.includes(value)) return "Opción no válida";
+    return null;
+  },
+
+  fecha_incidente(value) {
+    { const _e = _validar_helper_1(value); if (_e) return _e; }
+    if (value && isNaN(Date.parse(value))) return "Fecha inválida";
+    return null;
+  },
+
+  descripcion(value) {
+    { const _e = _validar_helper_1(value); if (_e) return _e; }
+    if ((value ?? "").toString().trim().length < 20) return "Mínimo 20 caracteres";
+    if ((value ?? "").toString().trim().length > 1000) return "Máximo 1000 caracteres";
+    return null;
+  },
+
+  numero_equipo(value) {
+    if ((value ?? "").toString().trim().length > 50) return "Máximo 50 caracteres";
+    return null;
+  },
+
+  acepta_seguimiento(value) {
+    return null;
+  },
+
 };
 
-// ── Handler de envío ─────────────────────────────────────────
-
-async function enviarRegistroEmpleado(datos) {
-  // Validar todos los campos antes de enviar
+async function enviarSoporteTecnico(datos) {
   const errores = {};
   for (const [campo, validar] of Object.entries(validaciones)) {
     const error = validar(datos[campo] ?? "");
@@ -45,25 +75,23 @@ async function enviarRegistroEmpleado(datos) {
   }
 
   try {
-    const respuesta = await fetch("/api/empleados", {
+    const respuesta = await fetch("/api/soporte/tickets", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(datos),
     });
 
     if (respuesta.ok) {
-      console.info("Empleado registrado correctamente");
-      window.location.href = "/lista";
+      console.info("Tu ticket fue enviado correctamente");
+      window.location.href = "/soporte/confirmacion";
       return { ok: true };
     } else {
-      return { ok: false, mensaje: "mostrar mensaje" };
+      return { ok: false, mensaje: "Error al enviar el ticket, intenta de nuevo" };
     }
   } catch (err) {
-    return { ok: false, mensaje: "mostrar mensaje: " + err.message };
+    return { ok: false, mensaje: "Error al enviar el ticket, intenta de nuevo: " + err.message };
   }
 }
-
-// ── Activación en tiempo real (debounce 300ms) ───────────────
 
 function _debounce(fn, ms) {
   let timer;
@@ -73,7 +101,7 @@ function _debounce(fn, ms) {
   };
 }
 
-function activarRegistroEmpleado(formElement) {
+function activarSoporteTecnico(formElement) {
   if (!formElement) { console.error("Elemento de formulario no encontrado"); return; }
 
   for (const [campo, validar] of Object.entries(validaciones)) {
@@ -100,7 +128,7 @@ function activarRegistroEmpleado(formElement) {
   formElement.addEventListener("submit", async (e) => {
     e.preventDefault();
     const datos = Object.fromEntries(new FormData(formElement));
-    const resultado = await enviarRegistroEmpleado(datos);
+    const resultado = await enviarSoporteTecnico(datos);
     if (!resultado.ok && resultado.errores) {
       for (const [campo, msg] of Object.entries(resultado.errores)) {
         let msgEl = formElement.querySelector(`[data-error="${campo}"]`);
@@ -119,7 +147,6 @@ function activarRegistroEmpleado(formElement) {
   });
 }
 
-// ── Exportación ──────────────────────────────────────────────
 if (typeof module !== "undefined") {
-  module.exports = { validaciones, enviarRegistroEmpleado, activarRegistroEmpleado };
+  module.exports = { validaciones, enviarSoporteTecnico, activarSoporteTecnico };
 }

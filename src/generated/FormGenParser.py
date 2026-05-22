@@ -1,5 +1,3 @@
-# Generated from grammar/FormGenParser.g4 by ANTLR 4.13.1
-# encoding: utf-8
 from antlr4 import *
 from io import StringIO
 import sys
@@ -101,36 +99,36 @@ class FormGenParser ( Parser ):
 
     sharedContextCache = PredictionContextCache()
 
-    literalNames = [ "<INVALID>", "'form'", "'section'", "'field'", "'on_submit'", 
-                     "'type'", "'label'", "'placeholder'", "'required'", 
-                     "'unique'", "'readonly'", "'hidden'", "'default'", 
-                     "'min_length'", "'max_length'", "'min'", "'max'", "'options'", 
-                     "'icon'", "'title'", "'theme'", "'layout'", "'size'", 
-                     "'submit'", "'cancel'", "'dark'", "'light'", "'primary'", 
-                     "'minimal'", "'stacked'", "'inline'", "'grid'", "'sm'", 
-                     "'md'", "'lg'", "'string'", "'email'", "'password'", 
-                     "'int'", "'float'", "'date'", "'boolean'", "'select'", 
-                     "'textarea'", "'person'", "'lock'", "'envelope'", "'phone'", 
-                     "'calendar'", "'search'", "'eye'", "'POST'", "'GET'", 
-                     "'success'", "'error'", "'redirect'", "'true'", "'false'", 
-                     "'='", "':'", "','", "'['", "']'", "'\\u2192'", "<INVALID>", 
-                     "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>", 
+    literalNames = [ "<INVALID>", "'form'", "'section'", "'field'", "'on_submit'",
+                     "'type'", "'label'", "'placeholder'", "'required'",
+                     "'unique'", "'readonly'", "'hidden'", "'default'",
+                     "'min_length'", "'max_length'", "'min'", "'max'", "'options'",
+                     "'icon'", "'title'", "'theme'", "'layout'", "'size'",
+                     "'submit'", "'cancel'", "'dark'", "'light'", "'primary'",
+                     "'minimal'", "'stacked'", "'inline'", "'grid'", "'sm'",
+                     "'md'", "'lg'", "'string'", "'email'", "'password'",
+                     "'int'", "'float'", "'date'", "'boolean'", "'select'",
+                     "'textarea'", "'person'", "'lock'", "'envelope'", "'phone'",
+                     "'calendar'", "'search'", "'eye'", "'POST'", "'GET'",
+                     "'success'", "'error'", "'redirect'", "'true'", "'false'",
+                     "'='", "':'", "','", "'['", "']'", "'\\u2192'", "<INVALID>",
+                     "<INVALID>", "<INVALID>", "<INVALID>", "<INVALID>",
                      "'<INDENT>'", "'<DEDENT>'" ]
 
-    symbolicNames = [ "<INVALID>", "FORM", "SECTION", "FIELD", "ON_SUBMIT", 
-                      "TYPE", "LABEL", "PLACEHOLDER", "REQUIRED", "UNIQUE", 
-                      "READONLY", "FIELD_HIDDEN", "DEFAULT", "MIN_LENGTH", 
-                      "MAX_LENGTH", "MIN", "MAX", "OPTIONS", "ICON", "TITLE", 
-                      "THEME", "LAYOUT", "SIZE", "SUBMIT", "CANCEL", "DARK", 
-                      "LIGHT", "PRIMARY", "MINIMAL", "STACKED", "INLINE", 
-                      "GRID", "SM", "MD", "LG", "T_STRING", "T_EMAIL", "T_PASSWORD", 
-                      "T_INT", "T_FLOAT", "T_DATE", "T_BOOLEAN", "T_SELECT", 
-                      "T_TEXTAREA", "ICON_PERSON", "ICON_LOCK", "ICON_ENVELOPE", 
-                      "ICON_PHONE", "ICON_CALENDAR", "ICON_SEARCH", "ICON_EYE", 
-                      "POST", "GET", "SUCCESS", "ERROR", "REDIRECT", "TRUE", 
-                      "FALSE", "EQUALS", "COLON", "COMMA", "LBRACKET", "RBRACKET", 
-                      "ARROW", "STRING", "INTEGER", "FLOAT", "URL_PATH", 
-                      "IDENTIFIER", "INDENT", "DEDENT", "NEWLINE", "WS", 
+    symbolicNames = [ "<INVALID>", "FORM", "SECTION", "FIELD", "ON_SUBMIT",
+                      "TYPE", "LABEL", "PLACEHOLDER", "REQUIRED", "UNIQUE",
+                      "READONLY", "FIELD_HIDDEN", "DEFAULT", "MIN_LENGTH",
+                      "MAX_LENGTH", "MIN", "MAX", "OPTIONS", "ICON", "TITLE",
+                      "THEME", "LAYOUT", "SIZE", "SUBMIT", "CANCEL", "DARK",
+                      "LIGHT", "PRIMARY", "MINIMAL", "STACKED", "INLINE",
+                      "GRID", "SM", "MD", "LG", "T_STRING", "T_EMAIL", "T_PASSWORD",
+                      "T_INT", "T_FLOAT", "T_DATE", "T_BOOLEAN", "T_SELECT",
+                      "T_TEXTAREA", "ICON_PERSON", "ICON_LOCK", "ICON_ENVELOPE",
+                      "ICON_PHONE", "ICON_CALENDAR", "ICON_SEARCH", "ICON_EYE",
+                      "POST", "GET", "SUCCESS", "ERROR", "REDIRECT", "TRUE",
+                      "FALSE", "EQUALS", "COLON", "COMMA", "LBRACKET", "RBRACKET",
+                      "ARROW", "STRING", "INTEGER", "FLOAT", "URL_PATH",
+                      "IDENTIFIER", "INDENT", "DEDENT", "NEWLINE", "WS",
                       "COMMENT" ]
 
     RULE_program = 0
@@ -156,10 +154,10 @@ class FormGenParser ( Parser ):
     RULE_error_clause = 20
     RULE_arrow_action = 21
 
-    ruleNames =  [ "program", "form_def", "form_attr", "theme_value", "layout_value", 
-                   "size_value", "section", "field", "field_prop", "field_type", 
-                   "icon_value", "option_list", "value", "number", "boolean_val", 
-                   "identifier", "on_submit", "http_action", "http_method", 
+    ruleNames =  [ "program", "form_def", "form_attr", "theme_value", "layout_value",
+                   "size_value", "section", "field", "field_prop", "field_type",
+                   "icon_value", "option_list", "value", "number", "boolean_val",
+                   "identifier", "on_submit", "http_action", "http_method",
                    "success_clause", "error_clause", "arrow_action" ]
 
     EOF = Token.EOF
@@ -243,9 +241,6 @@ class FormGenParser ( Parser ):
         self._interp = ParserATNSimulator(self, self.atn, self.decisionsToDFA, self.sharedContextCache)
         self._predicates = None
 
-
-
-
     class ProgramContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -255,7 +250,6 @@ class FormGenParser ( Parser ):
 
         def form_def(self):
             return self.getTypedRuleContext(FormGenParser.Form_defContext,0)
-
 
         def EOF(self):
             return self.getToken(FormGenParser.EOF, 0)
@@ -270,9 +264,6 @@ class FormGenParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitProgram" ):
                 listener.exitProgram(self)
-
-
-
 
     def program(self):
 
@@ -292,7 +283,6 @@ class FormGenParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class Form_defContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -305,7 +295,6 @@ class FormGenParser ( Parser ):
 
         def identifier(self):
             return self.getTypedRuleContext(FormGenParser.IdentifierContext,0)
-
 
         def NEWLINE(self):
             return self.getToken(FormGenParser.NEWLINE, 0)
@@ -322,17 +311,14 @@ class FormGenParser ( Parser ):
             else:
                 return self.getTypedRuleContext(FormGenParser.Form_attrContext,i)
 
-
         def section(self, i:int=None):
             if i is None:
                 return self.getTypedRuleContexts(FormGenParser.SectionContext)
             else:
                 return self.getTypedRuleContext(FormGenParser.SectionContext,i)
 
-
         def on_submit(self):
             return self.getTypedRuleContext(FormGenParser.On_submitContext,0)
-
 
         def getRuleIndex(self):
             return FormGenParser.RULE_form_def
@@ -345,27 +331,24 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitForm_def" ):
                 listener.exitForm_def(self)
 
-
-
-
     def form_def(self):
 
         localctx = FormGenParser.Form_defContext(self, self._ctx, self.state)
         self.enterRule(localctx, 2, self.RULE_form_def)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 47
             self.match(FormGenParser.FORM)
             self.state = 48
             self.identifier()
-            self.state = 50 
+            self.state = 50
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
                 self.state = 49
                 self.form_attr()
-                self.state = 52 
+                self.state = 52
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & 33030144) != 0)):
@@ -375,13 +358,13 @@ class FormGenParser ( Parser ):
             self.match(FormGenParser.NEWLINE)
             self.state = 55
             self.match(FormGenParser.INDENT)
-            self.state = 57 
+            self.state = 57
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
                 self.state = 56
                 self.section()
-                self.state = 59 
+                self.state = 59
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not (_la==2):
@@ -394,7 +377,6 @@ class FormGenParser ( Parser ):
                 self.state = 61
                 self.on_submit()
 
-
             self.state = 64
             self.match(FormGenParser.DEDENT)
         except RecognitionException as re:
@@ -404,7 +386,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class Form_attrContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -428,7 +409,6 @@ class FormGenParser ( Parser ):
         def theme_value(self):
             return self.getTypedRuleContext(FormGenParser.Theme_valueContext,0)
 
-
         def SUBMIT(self):
             return self.getToken(FormGenParser.SUBMIT, 0)
 
@@ -441,13 +421,11 @@ class FormGenParser ( Parser ):
         def layout_value(self):
             return self.getTypedRuleContext(FormGenParser.Layout_valueContext,0)
 
-
         def SIZE(self):
             return self.getToken(FormGenParser.SIZE, 0)
 
         def size_value(self):
             return self.getTypedRuleContext(FormGenParser.Size_valueContext,0)
-
 
         def getRuleIndex(self):
             return FormGenParser.RULE_form_attr
@@ -459,9 +437,6 @@ class FormGenParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitForm_attr" ):
                 listener.exitForm_attr(self)
-
-
-
 
     def form_attr(self):
 
@@ -536,7 +511,6 @@ class FormGenParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class Theme_valueContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -570,14 +544,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitTheme_value" ):
                 listener.exitTheme_value(self)
 
-
-
-
     def theme_value(self):
 
         localctx = FormGenParser.Theme_valueContext(self, self._ctx, self.state)
         self.enterRule(localctx, 6, self.RULE_theme_value)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 86
@@ -594,7 +565,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class Layout_valueContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -626,14 +596,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitLayout_value" ):
                 listener.exitLayout_value(self)
 
-
-
-
     def layout_value(self):
 
         localctx = FormGenParser.Layout_valueContext(self, self._ctx, self.state)
         self.enterRule(localctx, 8, self.RULE_layout_value)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 88
@@ -650,7 +617,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class Size_valueContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -682,14 +648,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitSize_value" ):
                 listener.exitSize_value(self)
 
-
-
-
     def size_value(self):
 
         localctx = FormGenParser.Size_valueContext(self, self._ctx, self.state)
         self.enterRule(localctx, 10, self.RULE_size_value)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 90
@@ -707,7 +670,6 @@ class FormGenParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class SectionContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -720,7 +682,6 @@ class FormGenParser ( Parser ):
 
         def identifier(self):
             return self.getTypedRuleContext(FormGenParser.IdentifierContext,0)
-
 
         def NEWLINE(self):
             return self.getToken(FormGenParser.NEWLINE, 0)
@@ -737,7 +698,6 @@ class FormGenParser ( Parser ):
             else:
                 return self.getTypedRuleContext(FormGenParser.FieldContext,i)
 
-
         def getRuleIndex(self):
             return FormGenParser.RULE_section
 
@@ -749,14 +709,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitSection" ):
                 listener.exitSection(self)
 
-
-
-
     def section(self):
 
         localctx = FormGenParser.SectionContext(self, self._ctx, self.state)
         self.enterRule(localctx, 12, self.RULE_section)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 92
@@ -767,13 +724,13 @@ class FormGenParser ( Parser ):
             self.match(FormGenParser.NEWLINE)
             self.state = 95
             self.match(FormGenParser.INDENT)
-            self.state = 97 
+            self.state = 97
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
                 self.state = 96
                 self.field()
-                self.state = 99 
+                self.state = 99
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not (_la==3):
@@ -789,7 +746,6 @@ class FormGenParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class FieldContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -802,7 +758,6 @@ class FormGenParser ( Parser ):
 
         def identifier(self):
             return self.getTypedRuleContext(FormGenParser.IdentifierContext,0)
-
 
         def NEWLINE(self):
             return self.getToken(FormGenParser.NEWLINE, 0)
@@ -819,7 +774,6 @@ class FormGenParser ( Parser ):
             else:
                 return self.getTypedRuleContext(FormGenParser.Field_propContext,i)
 
-
         def getRuleIndex(self):
             return FormGenParser.RULE_field
 
@@ -831,14 +785,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitField" ):
                 listener.exitField(self)
 
-
-
-
     def field(self):
 
         localctx = FormGenParser.FieldContext(self, self._ctx, self.state)
         self.enterRule(localctx, 14, self.RULE_field)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 103
@@ -849,13 +800,13 @@ class FormGenParser ( Parser ):
             self.match(FormGenParser.NEWLINE)
             self.state = 106
             self.match(FormGenParser.INDENT)
-            self.state = 108 
+            self.state = 108
             self._errHandler.sync(self)
             _la = self._input.LA(1)
             while True:
                 self.state = 107
                 self.field_prop()
-                self.state = 110 
+                self.state = 110
                 self._errHandler.sync(self)
                 _la = self._input.LA(1)
                 if not ((((_la) & ~0x3f) == 0 and ((1 << _la) & 524256) != 0)):
@@ -870,7 +821,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class Field_propContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -887,7 +837,6 @@ class FormGenParser ( Parser ):
 
         def field_type(self):
             return self.getTypedRuleContext(FormGenParser.Field_typeContext,0)
-
 
         def NEWLINE(self):
             return self.getToken(FormGenParser.NEWLINE, 0)
@@ -910,7 +859,6 @@ class FormGenParser ( Parser ):
         def boolean_val(self):
             return self.getTypedRuleContext(FormGenParser.Boolean_valContext,0)
 
-
         def READONLY(self):
             return self.getToken(FormGenParser.READONLY, 0)
 
@@ -922,7 +870,6 @@ class FormGenParser ( Parser ):
 
         def value(self):
             return self.getTypedRuleContext(FormGenParser.ValueContext,0)
-
 
         def MIN_LENGTH(self):
             return self.getToken(FormGenParser.MIN_LENGTH, 0)
@@ -939,7 +886,6 @@ class FormGenParser ( Parser ):
         def number(self):
             return self.getTypedRuleContext(FormGenParser.NumberContext,0)
 
-
         def MAX(self):
             return self.getToken(FormGenParser.MAX, 0)
 
@@ -949,13 +895,11 @@ class FormGenParser ( Parser ):
         def option_list(self):
             return self.getTypedRuleContext(FormGenParser.Option_listContext,0)
 
-
         def ICON(self):
             return self.getToken(FormGenParser.ICON, 0)
 
         def icon_value(self):
             return self.getTypedRuleContext(FormGenParser.Icon_valueContext,0)
-
 
         def getRuleIndex(self):
             return FormGenParser.RULE_field_prop
@@ -967,9 +911,6 @@ class FormGenParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitField_prop" ):
                 listener.exitField_prop(self)
-
-
-
 
     def field_prop(self):
 
@@ -1132,7 +1073,6 @@ class FormGenParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class Field_typeContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -1178,14 +1118,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitField_type" ):
                 listener.exitField_type(self)
 
-
-
-
     def field_type(self):
 
         localctx = FormGenParser.Field_typeContext(self, self._ctx, self.state)
         self.enterRule(localctx, 18, self.RULE_field_type)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 173
@@ -1202,7 +1139,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class Icon_valueContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -1243,14 +1179,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitIcon_value" ):
                 listener.exitIcon_value(self)
 
-
-
-
     def icon_value(self):
 
         localctx = FormGenParser.Icon_valueContext(self, self._ctx, self.state)
         self.enterRule(localctx, 20, self.RULE_icon_value)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 175
@@ -1267,7 +1200,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class Option_listContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -1305,14 +1237,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitOption_list" ):
                 listener.exitOption_list(self)
 
-
-
-
     def option_list(self):
 
         localctx = FormGenParser.Option_listContext(self, self._ctx, self.state)
         self.enterRule(localctx, 22, self.RULE_option_list)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 177
@@ -1341,7 +1270,6 @@ class FormGenParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class ValueContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -1361,7 +1289,6 @@ class FormGenParser ( Parser ):
         def boolean_val(self):
             return self.getTypedRuleContext(FormGenParser.Boolean_valContext,0)
 
-
         def getRuleIndex(self):
             return FormGenParser.RULE_value
 
@@ -1372,9 +1299,6 @@ class FormGenParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitValue" ):
                 listener.exitValue(self)
-
-
-
 
     def value(self):
 
@@ -1415,7 +1339,6 @@ class FormGenParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class NumberContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -1440,14 +1363,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitNumber" ):
                 listener.exitNumber(self)
 
-
-
-
     def number(self):
 
         localctx = FormGenParser.NumberContext(self, self._ctx, self.state)
         self.enterRule(localctx, 26, self.RULE_number)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 194
@@ -1464,7 +1384,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class Boolean_valContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -1490,14 +1409,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitBoolean_val" ):
                 listener.exitBoolean_val(self)
 
-
-
-
     def boolean_val(self):
 
         localctx = FormGenParser.Boolean_valContext(self, self._ctx, self.state)
         self.enterRule(localctx, 28, self.RULE_boolean_val)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 196
@@ -1514,7 +1430,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class IdentifierContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -1564,14 +1479,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitIdentifier" ):
                 listener.exitIdentifier(self)
 
-
-
-
     def identifier(self):
 
         localctx = FormGenParser.IdentifierContext(self, self._ctx, self.state)
         self.enterRule(localctx, 30, self.RULE_identifier)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 198
@@ -1588,7 +1500,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class On_submitContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -1609,14 +1520,11 @@ class FormGenParser ( Parser ):
         def http_action(self):
             return self.getTypedRuleContext(FormGenParser.Http_actionContext,0)
 
-
         def success_clause(self):
             return self.getTypedRuleContext(FormGenParser.Success_clauseContext,0)
 
-
         def error_clause(self):
             return self.getTypedRuleContext(FormGenParser.Error_clauseContext,0)
-
 
         def DEDENT(self):
             return self.getToken(FormGenParser.DEDENT, 0)
@@ -1631,9 +1539,6 @@ class FormGenParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitOn_submit" ):
                 listener.exitOn_submit(self)
-
-
-
 
     def on_submit(self):
 
@@ -1663,7 +1568,6 @@ class FormGenParser ( Parser ):
             self.exitRule()
         return localctx
 
-
     class Http_actionContext(ParserRuleContext):
         __slots__ = 'parser'
 
@@ -1673,7 +1577,6 @@ class FormGenParser ( Parser ):
 
         def http_method(self):
             return self.getTypedRuleContext(FormGenParser.Http_methodContext,0)
-
 
         def URL_PATH(self):
             return self.getToken(FormGenParser.URL_PATH, 0)
@@ -1691,9 +1594,6 @@ class FormGenParser ( Parser ):
         def exitRule(self, listener:ParseTreeListener):
             if hasattr( listener, "exitHttp_action" ):
                 listener.exitHttp_action(self)
-
-
-
 
     def http_action(self):
 
@@ -1714,7 +1614,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class Http_methodContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -1740,14 +1639,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitHttp_method" ):
                 listener.exitHttp_method(self)
 
-
-
-
     def http_method(self):
 
         localctx = FormGenParser.Http_methodContext(self, self._ctx, self.state)
         self.enterRule(localctx, 36, self.RULE_http_method)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 212
@@ -1764,7 +1660,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class Success_clauseContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -1788,7 +1683,6 @@ class FormGenParser ( Parser ):
         def arrow_action(self):
             return self.getTypedRuleContext(FormGenParser.Arrow_actionContext,0)
 
-
         def getRuleIndex(self):
             return FormGenParser.RULE_success_clause
 
@@ -1800,14 +1694,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitSuccess_clause" ):
                 listener.exitSuccess_clause(self)
 
-
-
-
     def success_clause(self):
 
         localctx = FormGenParser.Success_clauseContext(self, self._ctx, self.state)
         self.enterRule(localctx, 38, self.RULE_success_clause)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 214
@@ -1823,7 +1714,6 @@ class FormGenParser ( Parser ):
                 self.state = 217
                 self.arrow_action()
 
-
             self.state = 220
             self.match(FormGenParser.NEWLINE)
         except RecognitionException as re:
@@ -1833,7 +1723,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class Error_clauseContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -1865,14 +1754,11 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitError_clause" ):
                 listener.exitError_clause(self)
 
-
-
-
     def error_clause(self):
 
         localctx = FormGenParser.Error_clauseContext(self, self._ctx, self.state)
         self.enterRule(localctx, 40, self.RULE_error_clause)
-        self._la = 0 # Token type
+        self._la = 0
         try:
             self.enterOuterAlt(localctx, 1)
             self.state = 222
@@ -1888,7 +1774,6 @@ class FormGenParser ( Parser ):
                 self.state = 225
                 self.match(FormGenParser.NEWLINE)
 
-
         except RecognitionException as re:
             localctx.exception = re
             self._errHandler.reportError(self, re)
@@ -1896,7 +1781,6 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
 
     class Arrow_actionContext(ParserRuleContext):
         __slots__ = 'parser'
@@ -1925,9 +1809,6 @@ class FormGenParser ( Parser ):
             if hasattr( listener, "exitArrow_action" ):
                 listener.exitArrow_action(self)
 
-
-
-
     def arrow_action(self):
 
         localctx = FormGenParser.Arrow_actionContext(self, self._ctx, self.state)
@@ -1947,8 +1828,3 @@ class FormGenParser ( Parser ):
         finally:
             self.exitRule()
         return localctx
-
-
-
-
-

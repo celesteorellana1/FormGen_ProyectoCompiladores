@@ -7,6 +7,7 @@ from antlr4 import CommonTokenStream, FileStream
 from generated.FormGenLexer import FormGenLexer
 from generated.FormGenParser import FormGenParser
 
+# Imprime el stream de tokens del archivo .fg
 
 def test_tokens(filepath):
     print("=" * 50)
@@ -26,6 +27,7 @@ def test_tokens(filepath):
                    else "EOF"
             print(f"  [{token.line:>3}:{token.column:<3}]  {name:<20}  {repr(token.text)}")
 
+# Imprime el árbol de sintaxis generado por ANTLR
 
 def test_parse(filepath):
     print()

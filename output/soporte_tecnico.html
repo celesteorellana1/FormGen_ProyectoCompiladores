@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SoporteTecnico</title>
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    rel="stylesheet"
+    integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH"
+    crossorigin="anonymous">
+
+  <link
+    href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css"
+    rel="stylesheet">
+
+  <style>
+    body { min-height: 100vh; }
+
+    .fg-section-card {
+      border-radius: .75rem;
+      box-shadow: 0 2px 12px rgba(0,0,0,.08);
+    }
+
+    body.bg-dark .form-control,
+    body.bg-dark .form-select {
+      background-color: #2b2b2b;
+      color: #f8f9fa;
+      border-color: #555;
+    }
+    body.bg-dark .form-control:focus,
+    body.bg-dark .form-select:focus {
+      background-color: #333;
+      color: #fff;
+      border-color: #86b7fe;
+      box-shadow: 0 0 0 .25rem rgba(13,110,253,.25);
+    }
+    body.bg-dark .input-group-text {
+      background-color: #3a3a3a;
+      color: #adb5bd;
+      border-color: #555;
+    }
+    body.bg-dark .form-label  { color: #dee2e6; }
+    body.bg-dark .form-text   { color: #adb5bd; }
+    body.bg-dark .fg-section-card { background-color: #1e1e1e !important; }
+
+    body.bg-primary .form-control,
+    body.bg-primary .form-select {
+      background-color: #fff;
+      color: #212529;
+    }
+
+    #fg-toast-container { z-index: 1100; }
+  </style>
+</head><body class="bg-primary text-white py-5">
+
+<div class="container">
+
+  <div class="row justify-content-center mb-4">
+    <div class="col-lg-8 text-center">
+      <h1 class="display-6 fw-bold">
+        SoporteTecnico
+      </h1>
+    </div>
+  </div>
+
+  <div id="fg-toast-container" class="toast-container position-fixed bottom-0 end-0 p-3">
+    <div id="fg-toast" class="toast align-items-center border-0" role="alert" aria-live="assertive">
+      <div class="d-flex">
+        <div class="toast-body fw-semibold" id="fg-toast-msg"></div>
+        <button type="button" class="btn-close me-2 m-auto" data-bs-dismiss="toast"></button>
+      </div>
+    </div>
+  </div>
+
+  <form
+    id="fg-form"
+    class="needs-validation"
+    novalidate
+  >    <div class="row justify-content-center mb-4">
+      <div class="col-lg-8">
+        <div class="card fg-section-card bg-white text-dark">
+
+          <div class="card-header bg-primary text-white fw-semibold fs-6">
+            <i class="bi bi-layout-text-window-reverse me-2 opacity-75"></i>
+            Datos Contacto
+          </div>
+
+          <div class="card-body p-4">            <div class="row g-3">              <div class="col-md-6">
+                    <div class="mb-3">
+      <label for="nombre" class="form-label fw-semibold">
+        Nombre completo          <span class="text-danger ms-1" title="Requerido">*</span>      </label>
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="bi bi-person"></i>
+          </span>            <input
+    type="text"
+    class="form-control"
+    id="nombre"
+    name="nombre" placeholder="Tu nombre" required minlength="3" maxlength="80"  >
+        </div>
+      <div class="invalid-feedback">          Entre 3 y 80 caracteres.      </div>
+    </div>
+              </div>              <div class="col-md-6">
+                    <div class="mb-3">
+      <label for="email" class="form-label fw-semibold">
+        Correo electrónico          <span class="text-danger ms-1" title="Requerido">*</span>      </label>
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="bi bi-envelope"></i>
+          </span>            <input
+    type="email"
+    class="form-control"
+    id="email"
+    name="email" required  >
+        </div>
+      <div class="invalid-feedback">          Este campo es inválido.      </div>
+    </div>
+              </div>              <div class="col-md-6">
+                    <div class="mb-3">
+      <label for="telefono" class="form-label fw-semibold">
+        Teléfono (opcional)      </label>
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="bi bi-telephone"></i>
+          </span>            <input
+    type="text"
+    class="form-control"
+    id="telefono"
+    name="telefono" placeholder="+502 1234-5678" minlength="8" maxlength="15"  >
+        </div>
+      <div class="invalid-feedback">          Entre 8 y 15 caracteres.      </div>
+    </div>
+              </div>            </div>          </div>        </div>      </div>
+    </div>    <div class="row justify-content-center mb-4">
+      <div class="col-lg-8">
+        <div class="card fg-section-card bg-white text-dark">
+
+          <div class="card-header bg-primary text-white fw-semibold fs-6">
+            <i class="bi bi-layout-text-window-reverse me-2 opacity-75"></i>
+            Detalles Ticket
+          </div>
+
+          <div class="card-body p-4">            <div class="row g-3">              <div class="col-md-6">
+                    <div class="mb-3">
+      <label for="categoria" class="form-label fw-semibold">
+        Categoría del problema          <span class="text-danger ms-1" title="Requerido">*</span>      </label>
+          <select
+    class="form-select"
+    id="categoria"
+    name="categoria" required  >
+    <option value="" disabled selected>
+      — Seleccionar —
+    </option>    <option value="Hardware">
+      Hardware
+    </option>    <option value="Software">
+      Software
+    </option>    <option value="Red">
+      Red
+    </option>    <option value="Cuenta">
+      Cuenta
+    </option>    <option value="Otro">
+      Otro
+    </option>  </select>
+
+      <div class="invalid-feedback">          Este campo es inválido.      </div>
+    </div>
+              </div>              <div class="col-md-6">
+                    <div class="mb-3">
+      <label for="prioridad" class="form-label fw-semibold">
+        Prioridad          <span class="text-danger ms-1" title="Requerido">*</span>      </label>
+          <select
+    class="form-select"
+    id="prioridad"
+    name="prioridad" required  >
+    <option value="" disabled selected>
+      — Seleccionar —
+    </option>    <option value="Baja">
+      Baja
+    </option>    <option value="Media">
+      Media
+    </option>    <option value="Alta">
+      Alta
+    </option>    <option value="Crítica">
+      Crítica
+    </option>  </select>
+
+      <div class="invalid-feedback">          Este campo es inválido.      </div>
+    </div>
+              </div>              <div class="col-md-6">
+                    <div class="mb-3">
+      <label for="fecha_incidente" class="form-label fw-semibold">
+        Fecha del incidente          <span class="text-danger ms-1" title="Requerido">*</span>      </label>
+        <div class="input-group">
+          <span class="input-group-text">
+            <i class="bi bi-calendar"></i>
+          </span>            <input
+    type="date"
+    class="form-control"
+    id="fecha_incidente"
+    name="fecha_incidente" required  >
+        </div>
+      <div class="invalid-feedback">          Este campo es inválido.      </div>
+    </div>
+              </div>              <div class="col-md-6">
+                    <div class="mb-3">
+      <label for="descripcion" class="form-label fw-semibold">
+        Descripción del problema          <span class="text-danger ms-1" title="Requerido">*</span>      </label>
+          <textarea
+    class="form-control"
+    id="descripcion"
+    name="descripcion"
+    rows="4" placeholder="Describe el problema con el mayor detalle posible..." required minlength="20" maxlength="1000"  ></textarea>  <div class="form-text">Máximo 1000 caracteres.</div>
+      <div class="invalid-feedback">          Entre 20 y 1000 caracteres.      </div>
+    </div>
+              </div>            </div>          </div>        </div>      </div>
+    </div>    <div class="row justify-content-center mb-4">
+      <div class="col-lg-8">
+        <div class="card fg-section-card bg-white text-dark">
+
+          <div class="card-header bg-primary text-white fw-semibold fs-6">
+            <i class="bi bi-layout-text-window-reverse me-2 opacity-75"></i>
+            Adjuntos
+          </div>
+
+          <div class="card-body p-4">            <div class="row g-3">              <div class="col-md-6">
+                    <div class="mb-3">
+      <label for="numero_equipo" class="form-label fw-semibold">
+        Número de equipo / serial      </label>
+          <input
+    type="text"
+    class="form-control"
+    id="numero_equipo"
+    name="numero_equipo" placeholder="Ej: PC-042 o SN123456" maxlength="50"  >
+
+      <div class="invalid-feedback">          Máximo 50 caracteres.      </div>
+    </div>
+              </div>              <div class="col-md-6">
+                    <div class="mb-3">
+        <div class="form-check">
+    <input
+      class="form-check-input"
+      type="checkbox"
+      id="acepta_seguimiento"
+      name="acepta_seguimiento"
+      value="true" checked    >
+    <label class="form-check-label" for="acepta_seguimiento">
+      Acepto recibir actualizaciones por correo
+    </label>
+  </div>
+
+    </div>
+              </div>            </div>          </div>        </div>      </div>
+    </div>
+    <div class="row justify-content-center">
+      <div class="col-lg-8 d-flex gap-2 justify-content-end">        <button type="submit" class="btn btn-success" id="fg-btn-submit">
+          <span class="spinner-border spinner-border-sm me-2 d-none" id="fg-spinner"></span>
+          <i class="bi bi-send me-1"></i>
+          Enviar
+        </button>
+      </div>
+    </div>
+
+  </form>
+</div>
+<script
+  src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+  integrity="sha384-YvpcrYf0tY3lHB60NNkmXc4s9bIOgUxi8T/jzmq4kOTBHPcXSHx7LzRuOcuztKA"
+  crossorigin="anonymous"></script><script src="soporte_tecnico.js"></script>
+<script>
+(function () {
+  'use strict';
+
+  const form      = document.getElementById('fg-form');
+  const spinner   = document.getElementById('fg-spinner');
+  const submitBtn = document.getElementById('fg-btn-submit');
+
+  // showToast expuesto globalmente para que el JS externo (validaciones) pueda usarlo
+  window.showToast = function(msg, isError) {
+    const toastEl  = document.getElementById('fg-toast');
+    const toastMsg = document.getElementById('fg-toast-msg');
+    toastMsg.textContent = msg;
+    toastEl.classList.remove('text-bg-success', 'text-bg-danger');
+    toastEl.classList.add(isError ? 'text-bg-danger' : 'text-bg-success');
+    bootstrap.Toast.getOrCreateInstance(toastEl, { delay: 4000 }).show();
+  };
+
+  form.addEventListener('submit', async function (e) {
+    e.preventDefault();
+    e.stopPropagation();
+
+    if (!form.checkValidity()) {
+      form.classList.add('was-validated');
+      return;
+    }
+
+    spinner.classList.remove('d-none');
+    submitBtn.disabled = true;
+
+    const formData = Object.fromEntries(new FormData(form).entries());
+
+    try {      const res = await fetch('/api/soporte/tickets', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify(formData),
+      });
+
+      if (res.ok) {
+        window.showToast('Tu ticket fue enviado correctamente', false);        setTimeout(() => { window.location.href = '/soporte/confirmacion'; }, 1500);      } else {
+        window.showToast('Error al enviar el ticket, intenta de nuevo', true);
+      }
+    } catch (err) {
+      window.showToast('Error de red: ' + err.message, true);
+    } finally {
+      spinner.classList.add('d-none');
+      submitBtn.disabled = false;
+    }
+  });  activarSoporteTecnico(form);})();
+</script>
+
+</body>
+</html>

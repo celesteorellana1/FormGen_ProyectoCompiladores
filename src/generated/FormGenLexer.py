@@ -1,4 +1,3 @@
-# Generated from grammar/FormGenLexer.g4 by ANTLR 4.13.1
 from antlr4 import *
 from io import StringIO
 import sys
@@ -7,12 +6,10 @@ if sys.version_info[1] > 5:
 else:
     from typing.io import TextIO
 
-
 from antlr4.Token import CommonToken
 from antlr4.CommonTokenFactory import CommonTokenFactory
 from antlr4 import Token
 from collections import deque
-
 
 def serializedATN():
     return [
@@ -322,44 +319,44 @@ class FormGenLexer(Lexer):
     modeNames = [ "DEFAULT_MODE" ]
 
     literalNames = [ "<INVALID>",
-            "'form'", "'section'", "'field'", "'on_submit'", "'type'", "'label'", 
-            "'placeholder'", "'required'", "'unique'", "'readonly'", "'hidden'", 
-            "'default'", "'min_length'", "'max_length'", "'min'", "'max'", 
-            "'options'", "'icon'", "'title'", "'theme'", "'layout'", "'size'", 
-            "'submit'", "'cancel'", "'dark'", "'light'", "'primary'", "'minimal'", 
-            "'stacked'", "'inline'", "'grid'", "'sm'", "'md'", "'lg'", "'string'", 
-            "'email'", "'password'", "'int'", "'float'", "'date'", "'boolean'", 
-            "'select'", "'textarea'", "'person'", "'lock'", "'envelope'", 
-            "'phone'", "'calendar'", "'search'", "'eye'", "'POST'", "'GET'", 
-            "'success'", "'error'", "'redirect'", "'true'", "'false'", "'='", 
+            "'form'", "'section'", "'field'", "'on_submit'", "'type'", "'label'",
+            "'placeholder'", "'required'", "'unique'", "'readonly'", "'hidden'",
+            "'default'", "'min_length'", "'max_length'", "'min'", "'max'",
+            "'options'", "'icon'", "'title'", "'theme'", "'layout'", "'size'",
+            "'submit'", "'cancel'", "'dark'", "'light'", "'primary'", "'minimal'",
+            "'stacked'", "'inline'", "'grid'", "'sm'", "'md'", "'lg'", "'string'",
+            "'email'", "'password'", "'int'", "'float'", "'date'", "'boolean'",
+            "'select'", "'textarea'", "'person'", "'lock'", "'envelope'",
+            "'phone'", "'calendar'", "'search'", "'eye'", "'POST'", "'GET'",
+            "'success'", "'error'", "'redirect'", "'true'", "'false'", "'='",
             "':'", "','", "'['", "']'", "'\\u2192'", "'<INDENT>'", "'<DEDENT>'" ]
 
     symbolicNames = [ "<INVALID>",
-            "FORM", "SECTION", "FIELD", "ON_SUBMIT", "TYPE", "LABEL", "PLACEHOLDER", 
-            "REQUIRED", "UNIQUE", "READONLY", "FIELD_HIDDEN", "DEFAULT", 
-            "MIN_LENGTH", "MAX_LENGTH", "MIN", "MAX", "OPTIONS", "ICON", 
-            "TITLE", "THEME", "LAYOUT", "SIZE", "SUBMIT", "CANCEL", "DARK", 
-            "LIGHT", "PRIMARY", "MINIMAL", "STACKED", "INLINE", "GRID", 
-            "SM", "MD", "LG", "T_STRING", "T_EMAIL", "T_PASSWORD", "T_INT", 
-            "T_FLOAT", "T_DATE", "T_BOOLEAN", "T_SELECT", "T_TEXTAREA", 
-            "ICON_PERSON", "ICON_LOCK", "ICON_ENVELOPE", "ICON_PHONE", "ICON_CALENDAR", 
-            "ICON_SEARCH", "ICON_EYE", "POST", "GET", "SUCCESS", "ERROR", 
-            "REDIRECT", "TRUE", "FALSE", "EQUALS", "COLON", "COMMA", "LBRACKET", 
-            "RBRACKET", "ARROW", "STRING", "INTEGER", "FLOAT", "URL_PATH", 
+            "FORM", "SECTION", "FIELD", "ON_SUBMIT", "TYPE", "LABEL", "PLACEHOLDER",
+            "REQUIRED", "UNIQUE", "READONLY", "FIELD_HIDDEN", "DEFAULT",
+            "MIN_LENGTH", "MAX_LENGTH", "MIN", "MAX", "OPTIONS", "ICON",
+            "TITLE", "THEME", "LAYOUT", "SIZE", "SUBMIT", "CANCEL", "DARK",
+            "LIGHT", "PRIMARY", "MINIMAL", "STACKED", "INLINE", "GRID",
+            "SM", "MD", "LG", "T_STRING", "T_EMAIL", "T_PASSWORD", "T_INT",
+            "T_FLOAT", "T_DATE", "T_BOOLEAN", "T_SELECT", "T_TEXTAREA",
+            "ICON_PERSON", "ICON_LOCK", "ICON_ENVELOPE", "ICON_PHONE", "ICON_CALENDAR",
+            "ICON_SEARCH", "ICON_EYE", "POST", "GET", "SUCCESS", "ERROR",
+            "REDIRECT", "TRUE", "FALSE", "EQUALS", "COLON", "COMMA", "LBRACKET",
+            "RBRACKET", "ARROW", "STRING", "INTEGER", "FLOAT", "URL_PATH",
             "IDENTIFIER", "INDENT", "DEDENT", "NEWLINE", "WS", "COMMENT" ]
 
-    ruleNames = [ "FORM", "SECTION", "FIELD", "ON_SUBMIT", "TYPE", "LABEL", 
-                  "PLACEHOLDER", "REQUIRED", "UNIQUE", "READONLY", "FIELD_HIDDEN", 
-                  "DEFAULT", "MIN_LENGTH", "MAX_LENGTH", "MIN", "MAX", "OPTIONS", 
-                  "ICON", "TITLE", "THEME", "LAYOUT", "SIZE", "SUBMIT", 
-                  "CANCEL", "DARK", "LIGHT", "PRIMARY", "MINIMAL", "STACKED", 
-                  "INLINE", "GRID", "SM", "MD", "LG", "T_STRING", "T_EMAIL", 
-                  "T_PASSWORD", "T_INT", "T_FLOAT", "T_DATE", "T_BOOLEAN", 
-                  "T_SELECT", "T_TEXTAREA", "ICON_PERSON", "ICON_LOCK", 
-                  "ICON_ENVELOPE", "ICON_PHONE", "ICON_CALENDAR", "ICON_SEARCH", 
-                  "ICON_EYE", "POST", "GET", "SUCCESS", "ERROR", "REDIRECT", 
-                  "TRUE", "FALSE", "EQUALS", "COLON", "COMMA", "LBRACKET", 
-                  "RBRACKET", "ARROW", "STRING", "INTEGER", "FLOAT", "URL_PATH", 
+    ruleNames = [ "FORM", "SECTION", "FIELD", "ON_SUBMIT", "TYPE", "LABEL",
+                  "PLACEHOLDER", "REQUIRED", "UNIQUE", "READONLY", "FIELD_HIDDEN",
+                  "DEFAULT", "MIN_LENGTH", "MAX_LENGTH", "MIN", "MAX", "OPTIONS",
+                  "ICON", "TITLE", "THEME", "LAYOUT", "SIZE", "SUBMIT",
+                  "CANCEL", "DARK", "LIGHT", "PRIMARY", "MINIMAL", "STACKED",
+                  "INLINE", "GRID", "SM", "MD", "LG", "T_STRING", "T_EMAIL",
+                  "T_PASSWORD", "T_INT", "T_FLOAT", "T_DATE", "T_BOOLEAN",
+                  "T_SELECT", "T_TEXTAREA", "ICON_PERSON", "ICON_LOCK",
+                  "ICON_ENVELOPE", "ICON_PHONE", "ICON_CALENDAR", "ICON_SEARCH",
+                  "ICON_EYE", "POST", "GET", "SUCCESS", "ERROR", "REDIRECT",
+                  "TRUE", "FALSE", "EQUALS", "COLON", "COMMA", "LBRACKET",
+                  "RBRACKET", "ARROW", "STRING", "INTEGER", "FLOAT", "URL_PATH",
                   "IDENTIFIER", "INDENT", "DEDENT", "NEWLINE", "WS", "COMMENT" ]
 
     grammarFileName = "FormGenLexer.g4"
@@ -370,7 +367,6 @@ class FormGenLexer(Lexer):
         self._interp = LexerATNSimulator(self, self.atn, self.decisionsToDFA, PredictionContextCache())
         self._actions = None
         self._predicates = None
-
 
     indent_stack = [0]
     token_queue = deque()
@@ -430,11 +426,10 @@ class FormGenLexer(Lexer):
                 self.indent_stack.pop()
                 self.token_queue.append(self._make_token(self.DEDENT, "<DEDENT>"))
 
-
     def action(self, localctx:RuleContext, ruleIndex:int, actionIndex:int):
         if self._actions is None:
             actions = dict()
-            actions[70] = self.NEWLINE_action 
+            actions[70] = self.NEWLINE_action
             self._actions = actions
         action = self._actions.get(ruleIndex, None)
         if action is not None:
@@ -442,10 +437,6 @@ class FormGenLexer(Lexer):
         else:
             raise Exception("No registered action for:" + str(ruleIndex))
 
-
     def NEWLINE_action(self, localctx:RuleContext , actionIndex:int):
         if actionIndex == 0:
-             self.handle_newline() 
-     
-
-
+             self.handle_newline()

@@ -1,30 +1,20 @@
 import sys
 import os
-import argparse
-from collections import Counter
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'generated'))
 
+# Helpers de formato y utilidades
 
 def _js_str(text):
-    """Escapa comillas dobles para embeber en string JS."""
     return text.replace('\\', '\\\\').replace('"', '\\"')
 
-
 def _indent(lines, level=1):
-    """Aplica indentación de 2 espacios a una lista de líneas."""
     pad = "  " * level
     return [pad + l for l in lines]
 
-
-# Validadores genéricos reutilizables 
+# Detección de validadores compartidos entre campos
 
 def _collect_shared_validators(fields):
-    """
-    Detecta reglas repetidas entre campos y devuelve un dict:
-        signature → nombre_de_funcion_helper
-    Solo se comparte una regla si aparece en 2+ campos.
-    """
     from collections import Counter
 
     rule_count = Counter()
@@ -40,12 +30,7 @@ def _collect_shared_validators(fields):
             helper_idx += 1
     return shared
 
-
 def _field_rule_signatures(f):
-    """
-    Devuelve una lista de strings que identifican de forma única
-    cada regla de validación de un campo (para detección de duplicados).
-    """
     sigs = []
     if f.is_required:
         sigs.append("required")
@@ -63,21 +48,16 @@ def _field_rule_signatures(f):
         sigs.append("date_format")
     return sigs
 
-
-# Generación de helpers compartidos 
+# Generación de funciones helper compartidas
 
 def _gen_shared_helpers(shared):
-    """
-    Genera las funciones helper reutilizables.
-    Cada helper recibe (value) y retorna un mensaje de error o null.
-    """
     if not shared:
         return []
 
-    lines = ["// ── Validadores genéricos reutilizables ─────────────────────", ""]
+    lines = []
 
     for sig, fname in shared.items():
-        lines.append(f"function {fname}(value) {{")
+        lines.append(f"function {fname}(value) { ")
         body = _sig_to_check(sig)
         lines.extend(_indent(body))
         lines.append("  return null;")
@@ -86,9 +66,7 @@ def _gen_shared_helpers(shared):
 
     return lines
 
-
 def _sig_to_check(sig):
-    """Convierte una signature a las líneas JS del chequeo correspondiente."""
     if sig == "required":
         return [
             'const v = (value ?? "").toString().trim();',
@@ -117,87 +95,71 @@ def _sig_to_check(sig):
         ]
     return []
 
-
-# Generación de validador por campo 
+# Generación de validadores por campo
 
 def _gen_field_validator(f, shared, label):
-    """
-    Genera la función validadora para un campo específico.
-    Usa helpers compartidos cuando aplica (evita duplicar código).
-    Aplica early-return: retorna el primer error encontrado.
-    """
     lines = []
     field_label = _js_str(label or f.name)
 
-    lines.append(f"  {f.name}(value) {{")
+    lines.append(f"  {f.name}(value) { ")
 
-    # Campos hidden o readonly: sin validación en cliente
     if f.is_hidden or f.is_readonly:
-        lines.append(f'    // Campo "{f.name}" es hidden/readonly — sin validación en cliente')
         lines.append("    return null;")
         lines.append("  },")
         lines.append("")
         return lines
 
-    # required
     if f.is_required:
         sig_req = "required"
         if sig_req in shared:
-            lines.append(f"    {{ const _e = {shared[sig_req]}(value); if (_e) return _e; }}")
+            lines.append(f"    {  const _e = {shared[sig_req]}(value); if (_e) return _e; } ")
         else:
             lines.append('    const _v = (value ?? "").toString().trim();')
             lines.append(f'    if (!_v) return "{_js_str(field_label)} es requerido";')
 
-    # email format
     if f.field_type == "email":
         sig = "email_format"
         if sig in shared:
-            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
+            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
         else:
             lines.append("    const _emailRx = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;")
             lines.append('    if (value && !_emailRx.test(value)) return "Ingresa un correo electrónico válido";')
 
-    # date format
     if f.field_type == "date":
         sig = "date_format"
         if sig in shared:
-            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
+            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
         else:
             lines.append('    if (value && isNaN(Date.parse(value))) return "Fecha inválida";')
 
-    # min_length
     if f.min_length is not None:
         sig = f"min_length:{f.min_length}"
         if sig in shared:
-            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
+            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
         else:
             lines.append(f'    if ((value ?? "").toString().trim().length < {f.min_length}) return "Mínimo {f.min_length} caracteres";')
 
-    # max_length
     if f.max_length is not None:
         sig = f"max_length:{f.max_length}"
         if sig in shared:
-            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
+            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
         else:
             lines.append(f'    if ((value ?? "").toString().trim().length > {f.max_length}) return "Máximo {f.max_length} caracteres";')
 
-    # min numérico
     if f.min_val is not None:
         sig = f"min_val:{f.min_val}"
         if sig in shared:
-            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
+            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
         else:
             lines.append(f'    if (Number(value) < {f.min_val}) return "El valor mínimo es {f.min_val}";')
 
-    # max numérico
     if f.max_val is not None:
         sig = f"max_val:{f.max_val}"
         if sig in shared:
-            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
+            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
         else:
             lines.append(f'    if (Number(value) > {f.max_val}) return "El valor máximo es {f.max_val}";')
 
-    # select: verificar que el valor esté en las opciones
     if f.field_type == "select" and f.options:
         opts_js = ", ".join(f'"{_js_str(o)}"' for o in f.options)
         lines.append(f"    const _opts = [{opts_js}];")
@@ -208,20 +170,11 @@ def _gen_field_validator(f, shared, label):
     lines.append("")
     return lines
 
-
-# Generación del bloque on_submit 
+# Generación del handler de envío
 
 def _gen_submit_handler(form, on_submit_info):
-    """
-    Genera el handler de submit con fetch().
-    on_submit_info es un dict con: method, url, success_msg,
-    success_action, success_url, error_msg
-    """
     lines = []
-    lines.append("// ── Handler de envío ─────────────────────────────────────────")
-    lines.append("")
-    lines.append(f"async function enviar{form.name}(datos) {{")
-    lines.append("  // Validar todos los campos antes de enviar")
+    lines.append(f"async function enviar{form.name}(datos) { ")
     lines.append("  const errores = {};")
     lines.append("  for (const [campo, validar] of Object.entries(validaciones)) {")
     lines.append("    const error = validar(datos[campo] ?? \"\");")
@@ -240,7 +193,7 @@ def _gen_submit_handler(form, on_submit_info):
         s_url  = on_submit_info.get("success_url")
 
         lines.append("  try {")
-        lines.append(f'    const respuesta = await fetch("{url}", {{')
+        lines.append(f'    const respuesta = await fetch("{url}", { ')
         lines.append(f'      method: "{method}",')
         lines.append('      headers: { "Content-Type": "application/json" },')
         lines.append("      body: JSON.stringify(datos),")
@@ -252,10 +205,10 @@ def _gen_submit_handler(form, on_submit_info):
             lines.append(f'      window.location.href = "{s_url}";')
         lines.append("      return { ok: true };")
         lines.append("    } else {")
-        lines.append(f'      return {{ ok: false, mensaje: "{e_msg}" }};')
+        lines.append(f'      return {  ok: false, mensaje: "{e_msg}" } ;')
         lines.append("    }")
         lines.append("  } catch (err) {")
-        lines.append(f'    return {{ ok: false, mensaje: "{e_msg}: " + err.message }};')
+        lines.append(f'    return {  ok: false, mensaje: "{e_msg}: " + err.message } ;')
         lines.append("  }")
     else:
         lines.append('  console.warn("No se definió bloque on_submit en el formulario.");')
@@ -265,17 +218,10 @@ def _gen_submit_handler(form, on_submit_info):
     lines.append("")
     return lines
 
-
-# Debounce y activación en tiempo real 
+# Activación de validación en tiempo real
 
 def _gen_realtime_activation(form):
-    """
-    Genera la función que conecta validaciones con el DOM en tiempo real.
-    Usa debounce de 300ms para no validar en cada keystroke.
-    """
     lines = []
-    lines.append("// ── Activación en tiempo real (debounce 300ms) ───────────────")
-    lines.append("")
     lines.append("function _debounce(fn, ms) {")
     lines.append("  let timer;")
     lines.append("  return (...args) => {")
@@ -284,7 +230,7 @@ def _gen_realtime_activation(form):
     lines.append("  };")
     lines.append("}")
     lines.append("")
-    lines.append(f"function activar{form.name}(formElement) {{")
+    lines.append(f"function activar{form.name}(formElement) { ")
     lines.append('  if (!formElement) { console.error("Elemento de formulario no encontrado"); return; }')
     lines.append("")
     lines.append("  for (const [campo, validar] of Object.entries(validaciones)) {")
@@ -332,14 +278,10 @@ def _gen_realtime_activation(form):
     lines.append("")
     return lines
 
-
-# Función principal de generación 
+# Punto de entrada del generador JS
 
 def generate(result: dict, source_filename: str = "") -> str:
-    """
-    Recibe el dict de analyze() del analizador semántico.
-    Retorna el código JS como string.
-    """
+    
     if not result['ok']:
         raise ValueError("No se puede generar JS: el análisis semántico reportó errores.")
 
@@ -347,40 +289,41 @@ def generate(result: dict, source_filename: str = "") -> str:
     if form is None:
         raise ValueError("El resultado no contiene información de formulario.")
 
-    # Recolectar todos los campos activos (no hidden, no readonly)
     all_fields = [f for s in form.sections for f in s.fields]
     active_fields = [f for f in all_fields if not f.is_hidden and not f.is_readonly]
 
-    # Detectar validadores compartidos
     shared = _collect_shared_validators(active_fields)
 
-    # Mapear nombre de campo → label legible
     label_map = {}
     for s in form.sections:
         for f in s.fields:
             label_map[f.name] = f.name.replace("_", " ").capitalize()
 
-    on_submit_info = result.get('on_submit')
-
-    #  Ensamblar el archivo JS 
+    _os = result.get('on_submit')
+    if _os is None:
+        on_submit_info = None
+    elif isinstance(_os, dict):
+        on_submit_info = _os
+    else:
+        on_submit_info = {
+            'method':      getattr(_os, 'method',      None),
+            'url':         getattr(_os, 'url',         None),
+            'success_msg': getattr(_os, 'success_msg', None),
+            'error_msg':   getattr(_os, 'error_msg',   None),
+            'success_url': getattr(_os, 'success_url', None),
+        }
+ 
     out = []
 
     base = os.path.basename(source_filename) if source_filename else "formulario"
-    out.append(f"// Generado automáticamente por FormGem — fuente: {base}")
-    out.append(f"// Formulario: {form.name}")
-    out.append("// NO editar manualmente — regenerar desde el .fg")
-    out.append("")
 
     out.extend(_gen_shared_helpers(shared))
 
-    out.append("// ── Validaciones por campo ───────────────────────────────────")
-    out.append("")
-    out.append(f"const validaciones = {{")
+    out.append(f"const validaciones = { ")
     out.append("")
 
     for s in form.sections:
         if s.fields:
-            out.append(f"  // Sección: {s.name}")
             for f in s.fields:
                 label = label_map.get(f.name, f.name)
                 out.extend(_gen_field_validator(f, shared, label))
@@ -391,74 +334,9 @@ def generate(result: dict, source_filename: str = "") -> str:
     out.extend(_gen_submit_handler(form, on_submit_info))
     out.extend(_gen_realtime_activation(form))
 
-    out.append("// ── Exportación ──────────────────────────────────────────────")
     out.append('if (typeof module !== "undefined") {')
-    out.append(f"  module.exports = {{ validaciones, enviar{form.name}, activar{form.name} }};")
+    out.append(f"  module.exports = {  validaciones, enviar{form.name}, activar{form.name} } ;")
     out.append("}")
     out.append("")
 
     return "\n".join(out)
-
-
-# CLI independiente 
-
-def main():
-    parser = argparse.ArgumentParser(
-        description="FormGem — Generador de JavaScript",
-        epilog="""
-Ejemplos:
-  python generador_js.py examples/formulario_completo.fg
-  python generador_js.py examples/registro_empleado.fg -o salida.js
-        """,
-    )
-    parser.add_argument("archivo", help="Archivo .fg de entrada")
-    parser.add_argument("-o", "--output", help="Archivo .js de salida")
-    args = parser.parse_args()
-
-    src_dir = os.path.dirname(os.path.abspath(__file__))
-    sys.path.insert(0, src_dir)
-    from analizador_semantico import analyze, print_report
-
-    filepath = args.archivo
-    if not os.path.isfile(filepath):
-        print(f" Archivo no encontrado: {filepath}")
-        sys.exit(1)
-
-    print("-" * 60)
-    print("  FASE 1 — Análisis Semántico")
-    print("-" * 60)
-    result = analyze(filepath)
-    print_report(result, filepath)
-
-    if not result['ok']:
-        print("\n Generación cancelada por errores semánticos.")
-        sys.exit(1)
-
-    print()
-    print("-" * 60)
-    print("  FASE 2 — Generación de JavaScript")
-    print("-" * 60)
-
-    try:
-        js_code = generate(result, filepath)
-    except ValueError as e:
-        print(f" Error de generación: {e}")
-        sys.exit(1)
-
-    if args.output:
-        out_path = args.output
-    else:
-        base_name = os.path.splitext(os.path.basename(filepath))[0]
-        out_dir   = os.path.dirname(os.path.abspath(filepath))
-        out_path  = os.path.join(out_dir, base_name + ".js")
-
-    with open(out_path, "w", encoding="utf-8") as f:
-        f.write(js_code)
-
-    print(f"\n   Archivo generado: {out_path}")
-    print(f"   Líneas generadas: {js_code.count(chr(10))}")
-    print("-" * 60)
-
-
-if __name__ == "__main__":
-    main()

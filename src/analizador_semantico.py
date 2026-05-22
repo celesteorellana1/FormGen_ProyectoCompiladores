@@ -8,6 +8,7 @@ from generated.FormGenLexer import FormGenLexer
 from generated.FormGenParser import FormGenParser
 from generated.FormGenParserListener import FormGenParserListener
 
+# Tablas de validación por tipo de campo
 
 VALID_PROPS_BY_TYPE = {
     "string":   {"label", "placeholder", "required", "unique", "readonly", "hidden",
@@ -41,14 +42,16 @@ DEFAULT_VALUE_TYPE = {
     "textarea": "string",
 }
 
-REQUIRES_OPTIONS  = {"select"}
-FORBIDS_OPTIONS   = {"string", "email", "password", "int", "float", "date", "boolean", "textarea"}
-VALID_ICONS       = {"person", "lock", "envelope", "phone", "calendar", "search", "eye"}
-VALID_FIELD_TYPES = set(VALID_PROPS_BY_TYPE.keys())
-VALID_THEMES      = {"dark", "light", "primary", "minimal"}
-VALID_LAYOUTS     = {"stacked", "inline", "grid"}
-VALID_SIZES       = {"sm", "md", "lg"}
+REQUIRES_OPTIONS   = {"select"}
+FORBIDS_OPTIONS    = {"string", "email", "password", "int", "float", "date", "boolean", "textarea"}
+VALID_ICONS        = {"person", "lock", "envelope", "phone", "calendar", "search", "eye"}
+VALID_FIELD_TYPES  = set(VALID_PROPS_BY_TYPE.keys())
+VALID_THEMES       = {"dark", "light", "primary", "minimal"}
+VALID_LAYOUTS      = {"stacked", "inline", "grid"}
+VALID_SIZES        = {"sm", "md", "lg"}
+VALID_HTTP_METHODS = {"POST", "GET"}
 
+# Estructuras de datos del AST semántico
 
 class FieldInfo:
     def __init__(self, name, line):
@@ -89,13 +92,28 @@ class SectionInfo:
         self.fields = []
 
 
+class OnSubmitInfo:
+    def __init__(self):
+        self.method = None
+        self.url = None
+        self.success_msg = None
+        self.success_url = None
+        self.error_msg = None
+
+    def __repr__(self):
+        return (f"OnSubmitInfo(method={self.method!r}, url={self.url!r}, "
+                f"success_msg={self.success_msg!r}, success_url={self.success_url!r}, "
+                f"error_msg={self.error_msg!r})")
+
+# Clases de reporte
+
 class SemanticError:
     def __init__(self, line, message):
         self.line = line
         self.message = message
 
     def __str__(self):
-        return f"  ❌ [Línea {self.line}] ERROR: {self.message}"
+        return f"  \u274c [L\u00ednea {self.line}] ERROR: {self.message}"
 
 
 class SemanticWarning:
@@ -104,8 +122,9 @@ class SemanticWarning:
         self.message = message
 
     def __str__(self):
-        return f"  ⚠️  [Línea {self.line}] ADVERTENCIA: {self.message}"
+        return f"  \u26a0\ufe0f  [L\u00ednea {self.line}] ADVERTENCIA: {self.message}"
 
+# Analizador semántico — listener sobre el árbol ANTLR
 
 class SemanticAnalyzer(FormGenParserListener):
 
@@ -117,7 +136,7 @@ class SemanticAnalyzer(FormGenParserListener):
         self._current_field = None
         self._field_names_in_section = set()
         self._section_names = set()
-        self.on_submit = None
+        self._on_submit = None
 
     def _error(self, ctx, msg):
         line = ctx.start.line if hasattr(ctx, 'start') else 0
@@ -131,6 +150,8 @@ class SemanticAnalyzer(FormGenParserListener):
         if text and text.startswith('"') and text.endswith('"'):
             return text[1:-1]
         return text
+
+    # form_def
 
     def enterForm_def(self, ctx: FormGenParser.Form_defContext):
         self._form = FormInfo(ctx.identifier().getText(), ctx.start.line)
@@ -156,31 +177,80 @@ class SemanticAnalyzer(FormGenParserListener):
             return
 
         if attr in self._form.attrs_seen:
-            self._error(ctx, f"Atributo de formulario '{attr}' declarado más de una vez.")
+            self._error(ctx, f"Atributo de formulario '{attr}' declarado m\u00e1s de una vez.")
         self._form.attrs_seen.add(attr)
 
         if ctx.THEME() and ctx.theme_value():
             val = self._strip_quotes(ctx.theme_value().getText())
             if val not in VALID_THEMES:
-                self._error(ctx, f"Tema inválido: '{val}'. Válidos: {sorted(VALID_THEMES)}.")
+                self._error(ctx, f"Tema inv\u00e1lido: '{val}'. V\u00e1lidos: {sorted(VALID_THEMES)}.")
             self._form.theme = val
 
         if ctx.LAYOUT() and ctx.layout_value():
             val = self._strip_quotes(ctx.layout_value().getText())
             if val not in VALID_LAYOUTS:
-                self._error(ctx, f"Layout inválido: '{val}'. Válidos: {sorted(VALID_LAYOUTS)}.")
+                self._error(ctx, f"Layout inv\u00e1lido: '{val}'. V\u00e1lidos: {sorted(VALID_LAYOUTS)}.")
             self._form.layout = val
 
         if ctx.SIZE() and ctx.size_value():
             val = self._strip_quotes(ctx.size_value().getText())
             if val not in VALID_SIZES:
-                self._error(ctx, f"Tamaño inválido: '{val}'. Válidos: {sorted(VALID_SIZES)}.")
+                self._error(ctx, f"Tama\u00f1o inv\u00e1lido: '{val}'. V\u00e1lidos: {sorted(VALID_SIZES)}.")
             self._form.size = val
+
+    # on_submit
+
+    def enterOn_submit(self, ctx: FormGenParser.On_submitContext):
+        info = OnSubmitInfo()
+
+        http_ctx = ctx.http_action()
+        if http_ctx:
+            method_ctx = http_ctx.http_method()
+            if method_ctx:
+                info.method = method_ctx.getText()
+                if info.method not in VALID_HTTP_METHODS:
+                    self._error(ctx,
+                        f"M\u00e9todo HTTP inv\u00e1lido: '{info.method}'. "
+                        f"V\u00e1lidos: {sorted(VALID_HTTP_METHODS)}.")
+
+            url_token = http_ctx.URL_PATH()
+            if url_token:
+                info.url = url_token.getText()
+
+        success_ctx = ctx.success_clause()
+        if success_ctx:
+            str_token = success_ctx.STRING()
+            if str_token:
+                info.success_msg = self._strip_quotes(str_token.getText())
+            arrow_ctx = success_ctx.arrow_action()
+            if arrow_ctx:
+                url_token = arrow_ctx.URL_PATH()
+                if url_token:
+                    info.success_url = url_token.getText()
+
+        error_ctx = ctx.error_clause()
+        if error_ctx:
+            str_token = error_ctx.STRING()
+            if str_token:
+                info.error_msg = self._strip_quotes(str_token.getText())
+
+        if not info.method:
+            self._error(ctx, "El bloque 'on_submit' no especifica un m\u00e9todo HTTP (POST/GET).")
+        if not info.url:
+            self._error(ctx, "El bloque 'on_submit' no especifica una URL de destino.")
+        if not info.success_msg:
+            self._warn(ctx, "El bloque 'on_submit' no tiene mensaje de \u00e9xito definido.")
+        if not info.error_msg:
+            self._warn(ctx, "El bloque 'on_submit' no tiene mensaje de error definido.")
+
+        self._on_submit = info
+
+    # section
 
     def enterSection(self, ctx: FormGenParser.SectionContext):
         name = ctx.identifier().getText()
         if name in self._section_names:
-            self._error(ctx, f"Sección '{name}' duplicada en el formulario.")
+            self._error(ctx, f"Secci\u00f3n '{name}' duplicada en el formulario.")
         self._section_names.add(name)
         self._current_section = SectionInfo(name, ctx.start.line)
         self._field_names_in_section = set()
@@ -189,12 +259,14 @@ class SemanticAnalyzer(FormGenParserListener):
 
     def exitSection(self, ctx: FormGenParser.SectionContext):
         if self._current_section and not self._current_section.fields:
-            self._warn(ctx, f"La sección '{self._current_section.name}' no contiene ningún campo.")
+            self._warn(ctx, f"La secci\u00f3n '{self._current_section.name}' no contiene ning\u00fan campo.")
+
+    # field
 
     def enterField(self, ctx: FormGenParser.FieldContext):
         name = ctx.identifier().getText()
         if name in self._field_names_in_section:
-            self._error(ctx, f"Campo '{name}' duplicado en la sección '{self._current_section.name}'.")
+            self._error(ctx, f"Campo '{name}' duplicado en la secci\u00f3n '{self._current_section.name}'.")
         self._field_names_in_section.add(name)
         self._current_field = FieldInfo(name, ctx.start.line)
         if self._current_section:
@@ -219,10 +291,11 @@ class SemanticAnalyzer(FormGenParserListener):
 
         for prop in f.props_seen:
             if prop not in allowed:
-                self._error(ctx, f"La propiedad '{prop}' no es válida para el tipo '{f.field_type}' (campo '{f.name}').")
+                self._error(ctx, f"La propiedad '{prop}' no es v\u00e1lida para el tipo '{f.field_type}' (campo '{f.name}').")
 
         text_types = {"string", "email", "password", "textarea"}
-        if ("min_length" in f.props_seen or "max_length" in f.props_seen) and f.field_type not in text_types:
+        if (("min_length" in f.props_seen or "max_length" in f.props_seen)
+                and f.field_type not in text_types):
             self._error(ctx, f"'min_length'/'max_length' solo aplica a tipos de texto (campo '{f.name}', tipo '{f.field_type}').")
 
         if f.min_length is not None and f.max_length is not None:
@@ -238,19 +311,19 @@ class SemanticAnalyzer(FormGenParserListener):
             actual = f.default_val_kind
             ok = (expected == actual) or (expected == "number" and actual in ("integer", "float"))
             if not ok:
-                self._error(ctx, f"El valor 'default' del campo '{f.name}' debería ser de tipo '{expected}' pero se encontró '{actual}'.")
+                self._error(ctx, f"El valor 'default' del campo '{f.name}' deber\u00eda ser de tipo '{expected}' pero se encontr\u00f3 '{actual}'.")
 
         if f.is_hidden and f.is_required:
-            self._warn(ctx, f"El campo '{f.name}' es 'hidden' y 'required' al mismo tiempo (los campos ocultos no pueden ser completados por el usuario).")
+            self._warn(ctx, f"El campo '{f.name}' es 'hidden' y 'required' al mismo tiempo.")
 
         if f.is_readonly and f.is_required:
-            self._warn(ctx, f"El campo '{f.name}' es 'readonly' y 'required'. Un campo de solo lectura no puede ser modificado por el usuario.")
+            self._warn(ctx, f"El campo '{f.name}' es 'readonly' y 'required'.")
 
         if f.min_length == 0:
             self._warn(ctx, f"'min_length: 0' en el campo '{f.name}' no tiene efecto.")
 
         if f.field_type == "select" and len(f.options) < 2:
-            self._warn(ctx, f"El campo 'select' '{f.name}' tiene menos de 2 opciones ({len(f.options)}); considera agregar más.")
+            self._warn(ctx, f"El campo 'select' '{f.name}' tiene menos de 2 opciones ({len(f.options)}).")
 
     def enterField_prop(self, ctx: FormGenParser.Field_propContext):
         f = self._current_field
@@ -344,50 +417,17 @@ class SemanticAnalyzer(FormGenParserListener):
                 seen_opts = set()
                 for opt in f.options:
                     if opt in seen_opts:
-                        self._warn(ctx, f"Opción duplicada '{opt}' en el campo '{f.name}'.")
+                        self._warn(ctx, f"Opci\u00f3n duplicada '{opt}' en el campo '{f.name}'.")
                     seen_opts.add(opt)
         elif prop_name == 'icon':
             if ctx.icon_value():
                 icon = ctx.icon_value().getText()
                 if icon not in VALID_ICONS:
-                    self._error(ctx, f"Ícono desconocido: '{icon}' en campo '{f.name}'. Válidos: {sorted(VALID_ICONS)}.")
+                    self._error(ctx, f"\u00cdcono desconocido: '{icon}' en campo '{f.name}'. V\u00e1lidos: {sorted(VALID_ICONS)}.")
                 else:
                     f.icon = icon
 
-    def enterOn_submit(self, ctx: FormGenParser.On_submitContext):
-        self.on_submit = {
-            "method": None,
-            "url": None,
-            "success_msg": None,
-            "error_msg": None,
-            "success_action": None,
-            "success_url": None,
-        }
-
-    def enterHttp_action(self, ctx: FormGenParser.Http_actionContext):
-        if self.on_submit is None:
-            self.on_submit = {}
-        if ctx.http_method():
-            self.on_submit["method"] = ctx.http_method().getText()
-        if ctx.URL_PATH():
-            self.on_submit["url"] = ctx.URL_PATH().getText()
-
-    def enterSuccess_clause(self, ctx: FormGenParser.Success_clauseContext):
-        if self.on_submit is None:
-            self.on_submit = {}
-        if ctx.STRING():
-            self.on_submit["success_msg"] = self._strip_quotes(ctx.STRING().getText())
-        arrow = ctx.arrow_action()
-        if arrow and arrow.URL_PATH():
-            self.on_submit["success_action"] = "redirect"
-            self.on_submit["success_url"] = arrow.URL_PATH().getText()
-
-    def enterError_clause(self, ctx: FormGenParser.Error_clauseContext):
-        if self.on_submit is None:
-            self.on_submit = {}
-        if ctx.STRING():
-            self.on_submit["error_msg"] = self._strip_quotes(ctx.STRING().getText())
-
+# API pública: analyze() y print_report()
 
 def analyze(filepath: str) -> dict:
     input_stream = FileStream(filepath, encoding='utf-8')
@@ -399,9 +439,10 @@ def analyze(filepath: str) -> dict:
     if parser.getNumberOfSyntaxErrors() > 0:
         return {
             'ok': False,
-            'errors': [SemanticError(0, f"{parser.getNumberOfSyntaxErrors()} error(es) sintáctico(s). Corrige la sintaxis antes del análisis semántico.")],
+            'errors': [SemanticError(0, f"{parser.getNumberOfSyntaxErrors()} error(es) sint\u00e1ctico(s).")],
             'warnings': [],
             'form': None,
+            'on_submit': None,
         }
 
     analyzer = SemanticAnalyzer()
@@ -413,13 +454,13 @@ def analyze(filepath: str) -> dict:
         'errors': analyzer.errors,
         'warnings': analyzer.warnings,
         'form': analyzer._form,
-        'on_submit': analyzer.on_submit,
+        'on_submit': analyzer._on_submit,
     }
 
 
 def print_report(result: dict, filepath: str):
     print("=" * 60)
-    print(f"  ANÁLISIS SEMÁNTICO — {os.path.basename(filepath)}")
+    print(f"  AN\u00c1LISIS SEM\u00c1NTICO \u2014 {os.path.basename(filepath)}")
     print("=" * 60)
 
     form = result['form']
@@ -428,13 +469,18 @@ def print_report(result: dict, filepath: str):
         print(f"  Secciones  : {len(form.sections)}")
         print(f"  Campos     : {sum(len(s.fields) for s in form.sections)}")
 
+    on_submit = result.get('on_submit')
+    if on_submit:
+        redirect = f" \u2192 redirect {on_submit.success_url}" if on_submit.success_url else ""
+        print(f"  on_submit  : {on_submit.method} {on_submit.url}{redirect}")
+
     print()
     if result['errors']:
-        print(f"  Errores semánticos ({len(result['errors'])}):")
+        print(f"  Errores sem\u00e1nticos ({len(result['errors'])}):")
         for e in result['errors']:
             print(str(e))
     else:
-        print("  ✅ Sin errores semánticos")
+        print("  \u2705 Sin errores sem\u00e1nticos")
 
     print()
     if result['warnings']:
@@ -442,24 +488,8 @@ def print_report(result: dict, filepath: str):
         for w in result['warnings']:
             print(str(w))
     else:
-        print("  ✅ Sin advertencias")
+        print("  \u2705 Sin advertencias")
 
     print()
-    print(f"  Estado: {'✅ VÁLIDO' if result['ok'] else '❌ INVÁLIDO'}")
+    print(f"  Estado: {'\u2705 V\u00c1LIDO' if result['ok'] else '\u274c INV\u00c1LIDO'}")
     print("=" * 60)
-
-
-if __name__ == '__main__':
-    if len(sys.argv) < 2:
-        print("Uso: python semantic_analyzer.py <archivo.fg> [<archivo2.fg> ...]")
-        sys.exit(1)
-
-    any_error = False
-    for path in sys.argv[1:]:
-        result = analyze(path)
-        print_report(result, path)
-        print()
-        if not result['ok']:
-            any_error = True
-
-    sys.exit(1 if any_error else 0)

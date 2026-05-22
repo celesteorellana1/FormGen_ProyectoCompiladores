@@ -1,0 +1,59 @@
+form SoporteTecnico title="Ticket de Soporte" theme="primary" layout="grid" size="md" submit="Enviar Ticket" cancel="Cancelar"
+  section DatosContacto
+    field nombre
+      type: string
+      label: "Nombre completo"
+      required
+      min_length: 3
+      max_length: 80
+      placeholder: "Tu nombre"
+      icon: person
+    field email
+      type: email
+      label: "Correo electrónico"
+      required
+      icon: envelope
+    field telefono
+      type: string
+      label: "Teléfono (opcional)"
+      min_length: 8
+      max_length: 15
+      placeholder: "+502 1234-5678"
+      icon: phone
+  section DetallesTicket
+    field categoria
+      type: select
+      label: "Categoría del problema"
+      required
+      options: ["Hardware", "Software", "Red", "Cuenta", "Otro"]
+    field prioridad
+      type: select
+      label: "Prioridad"
+      required
+      options: ["Baja", "Media", "Alta", "Crítica"]
+    field fecha_incidente
+      type: date
+      label: "Fecha del incidente"
+      required
+      icon: calendar
+    field descripcion
+      type: textarea
+      label: "Descripción del problema"
+      required
+      min_length: 20
+      max_length: 1000
+      placeholder: "Describe el problema con el mayor detalle posible..."
+  section Adjuntos
+    field numero_equipo
+      type: string
+      label: "Número de equipo / serial"
+      max_length: 50
+      placeholder: "Ej: PC-042 o SN123456"
+    field acepta_seguimiento
+      type: boolean
+      label: "Acepto recibir actualizaciones por correo"
+      default: true
+  on_submit
+    POST /api/soporte/tickets
+    success: "Tu ticket fue enviado correctamente" → redirect /soporte/confirmacion
+    error: "Error al enviar el ticket, intenta de nuevo"
