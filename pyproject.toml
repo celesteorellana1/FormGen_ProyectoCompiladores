@@ -18,7 +18,7 @@ dependencies = [
 ]
 
 [project.scripts]
-formgem = "formgem.cli:main"
+formgem = "formgem:main"
 
 [tool.setuptools.packages.find]
 where = ["src"]
