@@ -57,7 +57,7 @@ def _gen_shared_helpers(shared):
     lines = []
 
     for sig, fname in shared.items():
-        lines.append(f"function {fname}(value) { ")
+        lines.append(f"function {fname}(value) {{")
         body = _sig_to_check(sig)
         lines.extend(_indent(body))
         lines.append("  return null;")
@@ -101,7 +101,7 @@ def _gen_field_validator(f, shared, label):
     lines = []
     field_label = _js_str(label or f.name)
 
-    lines.append(f"  {f.name}(value) { ")
+    lines.append(f"  {f.name}(value) {{")
 
     if f.is_hidden or f.is_readonly:
         lines.append("    return null;")
@@ -112,7 +112,7 @@ def _gen_field_validator(f, shared, label):
     if f.is_required:
         sig_req = "required"
         if sig_req in shared:
-            lines.append(f"    {  const _e = {shared[sig_req]}(value); if (_e) return _e; } ")
+            lines.append(f"    {{ const _e = {shared[sig_req]}(value); if (_e) return _e; }}")
         else:
             lines.append('    const _v = (value ?? "").toString().trim();')
             lines.append(f'    if (!_v) return "{_js_str(field_label)} es requerido";')
@@ -120,7 +120,7 @@ def _gen_field_validator(f, shared, label):
     if f.field_type == "email":
         sig = "email_format"
         if sig in shared:
-            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
+            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
         else:
             lines.append("    const _emailRx = /^[^\\s@]+@[^\\s@]+\\.[^\\s@]+$/;")
             lines.append('    if (value && !_emailRx.test(value)) return "Ingresa un correo electrónico válido";')
@@ -128,35 +128,35 @@ def _gen_field_validator(f, shared, label):
     if f.field_type == "date":
         sig = "date_format"
         if sig in shared:
-            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
+            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
         else:
             lines.append('    if (value && isNaN(Date.parse(value))) return "Fecha inválida";')
 
     if f.min_length is not None:
         sig = f"min_length:{f.min_length}"
         if sig in shared:
-            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
+            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
         else:
             lines.append(f'    if ((value ?? "").toString().trim().length < {f.min_length}) return "Mínimo {f.min_length} caracteres";')
 
     if f.max_length is not None:
         sig = f"max_length:{f.max_length}"
         if sig in shared:
-            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
+            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
         else:
             lines.append(f'    if ((value ?? "").toString().trim().length > {f.max_length}) return "Máximo {f.max_length} caracteres";')
 
     if f.min_val is not None:
         sig = f"min_val:{f.min_val}"
         if sig in shared:
-            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
+            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
         else:
             lines.append(f'    if (Number(value) < {f.min_val}) return "El valor mínimo es {f.min_val}";')
 
     if f.max_val is not None:
         sig = f"max_val:{f.max_val}"
         if sig in shared:
-            lines.append(f"    {  const _e = {shared[sig]}(value); if (_e) return _e; } ")
+            lines.append(f"    {{ const _e = {shared[sig]}(value); if (_e) return _e; }}")
         else:
             lines.append(f'    if (Number(value) > {f.max_val}) return "El valor máximo es {f.max_val}";')
 
@@ -174,7 +174,7 @@ def _gen_field_validator(f, shared, label):
 
 def _gen_submit_handler(form, on_submit_info):
     lines = []
-    lines.append(f"async function enviar{form.name}(datos) { ")
+    lines.append(f"async function enviar{form.name}(datos) {{")
     lines.append("  const errores = {};")
     lines.append("  for (const [campo, validar] of Object.entries(validaciones)) {")
     lines.append("    const error = validar(datos[campo] ?? \"\");")
@@ -193,7 +193,7 @@ def _gen_submit_handler(form, on_submit_info):
         s_url  = on_submit_info.get("success_url")
 
         lines.append("  try {")
-        lines.append(f'    const respuesta = await fetch("{url}", { ')
+        lines.append(f'    const respuesta = await fetch("http://127.0.0.1:8000{url}", {{')
         lines.append(f'      method: "{method}",')
         lines.append('      headers: { "Content-Type": "application/json" },')
         lines.append("      body: JSON.stringify(datos),")
@@ -205,14 +205,14 @@ def _gen_submit_handler(form, on_submit_info):
             lines.append(f'      window.location.href = "{s_url}";')
         lines.append("      return { ok: true };")
         lines.append("    } else {")
-        lines.append(f'      return {  ok: false, mensaje: "{e_msg}" } ;')
+        lines.append(f'      return {{ ok: false, mensaje: "{e_msg}" }};')
         lines.append("    }")
         lines.append("  } catch (err) {")
-        lines.append(f'    return {  ok: false, mensaje: "{e_msg}: " + err.message } ;')
+        lines.append(f'    return {{ ok: false, mensaje: "{e_msg}: " + err.message }};')
         lines.append("  }")
     else:
         lines.append('  console.warn("No se definió bloque on_submit en el formulario.");')
-        lines.append("  return { ok: false, mensaje: \"Sin acción de envío configurada\" };")
+        lines.append('  return { ok: false, mensaje: "Sin acción de envío configurada" };')
 
     lines.append("}")
     lines.append("")
@@ -230,7 +230,7 @@ def _gen_realtime_activation(form):
     lines.append("  };")
     lines.append("}")
     lines.append("")
-    lines.append(f"function activar{form.name}(formElement) { ")
+    lines.append(f"function activar{form.name}(formElement) {{")
     lines.append('  if (!formElement) { console.error("Elemento de formulario no encontrado"); return; }')
     lines.append("")
     lines.append("  for (const [campo, validar] of Object.entries(validaciones)) {")
@@ -254,7 +254,7 @@ def _gen_realtime_activation(form):
     lines.append('    input.addEventListener("blur",  (e) => mostrarError(e.target.value));')
     lines.append("  }")
     lines.append("")
-    lines.append("  formElement.addEventListener(\"submit\", async (e) => {")
+    lines.append('  formElement.addEventListener("submit", async (e) => {')
     lines.append("    e.preventDefault();")
     lines.append("    const datos = Object.fromEntries(new FormData(formElement));")
     lines.append(f"    const resultado = await enviar{form.name}(datos);")
@@ -281,7 +281,7 @@ def _gen_realtime_activation(form):
 # Punto de entrada del generador JS
 
 def generate(result: dict, source_filename: str = "") -> str:
-    
+
     if not result['ok']:
         raise ValueError("No se puede generar JS: el análisis semántico reportó errores.")
 
@@ -312,14 +312,14 @@ def generate(result: dict, source_filename: str = "") -> str:
             'error_msg':   getattr(_os, 'error_msg',   None),
             'success_url': getattr(_os, 'success_url', None),
         }
- 
+
     out = []
 
     base = os.path.basename(source_filename) if source_filename else "formulario"
 
     out.extend(_gen_shared_helpers(shared))
 
-    out.append(f"const validaciones = { ")
+    out.append("const validaciones = {")
     out.append("")
 
     for s in form.sections:
@@ -335,7 +335,7 @@ def generate(result: dict, source_filename: str = "") -> str:
     out.extend(_gen_realtime_activation(form))
 
     out.append('if (typeof module !== "undefined") {')
-    out.append(f"  module.exports = {  validaciones, enviar{form.name}, activar{form.name} } ;")
+    out.append(f"  module.exports = {{ validaciones, enviar{form.name}, activar{form.name} }};")
     out.append("}")
     out.append("")
 
