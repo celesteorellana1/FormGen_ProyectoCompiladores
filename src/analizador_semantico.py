@@ -491,5 +491,6 @@ def print_report(result: dict, filepath: str):
         print("  \u2705 Sin advertencias")
 
     print()
-    print(f"  Estado: {'\u2705 V\u00c1LIDO' if result['ok'] else '\u274c INV\u00c1LIDO'}")
+    estado = '✅ VÁLIDO' if result['ok'] else '❌ INVÁLIDO'
+    print(f"  Estado: {estado}")
     print("=" * 60)
