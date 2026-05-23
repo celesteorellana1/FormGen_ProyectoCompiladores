@@ -24,18 +24,23 @@ def _resolve_output_path(filepath: str, output: str | None, target: str) -> str:
 
     base_name = os.path.splitext(os.path.basename(filepath))[0]
 
-    if target == "html":
-        out_dir = os.path.join(os.path.dirname(os.path.abspath(filepath)),
-                               "..", "output")
-        out_dir = os.path.abspath(out_dir)
-        return os.path.join(out_dir, base_name + ".html")
-    elif target == "js":
-        suffix = ".js"
-    else:
-        suffix = "_backend.py"
+    # Directorio actual donde está parado el usuario
+    cwd = os.getcwd()
+    output_dir = os.path.join(cwd, "output")
 
-    out_dir = os.path.dirname(os.path.abspath(filepath))
-    return os.path.join(out_dir, base_name + suffix)
+    if target == "html":
+        # Si existe carpeta output la usa, si no genera en la raiz
+        if os.path.isdir(output_dir):
+            return os.path.join(output_dir, base_name + ".html")
+        return os.path.join(cwd, base_name + ".html")
+    elif target == "js":
+        if os.path.isdir(output_dir):
+            return os.path.join(output_dir, base_name + ".js")
+        return os.path.join(cwd, base_name + ".js")
+    else:
+        if os.path.isdir(output_dir):
+            return os.path.join(output_dir, base_name + "_backend.py")
+        return os.path.join(cwd, base_name + "_backend.py")
 
 
 def _write_output(out_path: str, code: str, target: str) -> bool:
