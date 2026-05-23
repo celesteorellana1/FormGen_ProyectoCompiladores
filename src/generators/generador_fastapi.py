@@ -1,204 +1,496 @@
-import os
-import re
 import sys
-from typing import Any
+import os
 
-sys.path.insert(0, os.path.join(os.path.dirname(__file__), "generated"))
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'generated'))
 
-# Helpers de formato de nombres
+from antlr4 import CommonTokenStream, FileStream, ParseTreeWalker
+from generated.FormGenLexer import FormGenLexer
+from generated.FormGenParser import FormGenParser
+from generated.FormGenParserListener import FormGenParserListener
 
-def _pascal_case(text: str) -> str:
-    parts = re.split(r"[^a-zA-Z0-9]+", text)
-    cleaned = [p for p in parts if p]
-    if not cleaned:
-        return "FormData"
-    return "".join(p[0].upper() + p[1:] for p in cleaned)
+# Tablas de validación por tipo de campo
 
-def _snake_case(text: str) -> str:
-    value = re.sub(r"[^a-zA-Z0-9]+", "_", text).strip("_").lower()
-    return value or "submit_form"
+VALID_PROPS_BY_TYPE = {
+    "string":   {"label", "placeholder", "required", "unique", "readonly", "hidden",
+                 "default", "min_length", "max_length", "icon"},
+    "email":    {"label", "placeholder", "required", "unique", "readonly", "hidden",
+                 "default", "min_length", "max_length", "icon"},
+    "password": {"label", "placeholder", "required", "unique", "readonly", "hidden",
+                 "default", "min_length", "max_length", "icon"},
+    "int":      {"label", "placeholder", "required", "unique", "readonly", "hidden",
+                 "default", "min", "max", "icon"},
+    "float":    {"label", "placeholder", "required", "unique", "readonly", "hidden",
+                 "default", "min", "max", "icon"},
+    "date":     {"label", "placeholder", "required", "unique", "readonly", "hidden",
+                 "default", "icon"},
+    "boolean":  {"label", "required", "hidden", "default"},
+    "select":   {"label", "placeholder", "required", "unique", "readonly", "hidden",
+                 "default", "options", "icon"},
+    "textarea": {"label", "placeholder", "required", "readonly", "hidden",
+                 "default", "min_length", "max_length"},
+}
 
-def _py_repr(value: Any) -> str:
-    if isinstance(value, str):
-        return repr(value)
-    if isinstance(value, bool):
-        return "True" if value else "False"
-    return repr(value)
+DEFAULT_VALUE_TYPE = {
+    "string":   "string",
+    "email":    "string",
+    "password": "string",
+    "int":      "integer",
+    "float":    "number",
+    "date":     "string",
+    "boolean":  "boolean",
+    "select":   "string",
+    "textarea": "string",
+}
 
-# Resolución de tipos Pydantic por campo
+REQUIRES_OPTIONS   = {"select"}
+FORBIDS_OPTIONS    = {"string", "email", "password", "int", "float", "date", "boolean", "textarea"}
+VALID_ICONS        = {"person", "lock", "envelope", "phone", "calendar", "search", "eye"}
+VALID_FIELD_TYPES  = set(VALID_PROPS_BY_TYPE.keys())
+VALID_THEMES       = {"dark", "light", "primary", "minimal"}
+VALID_LAYOUTS      = {"stacked", "inline", "grid"}
+VALID_SIZES        = {"sm", "md", "lg"}
+VALID_HTTP_METHODS = {"POST", "GET"}
 
-def _make_type_for_field(field) -> tuple[str, list[str], bool]:
-    field_type = getattr(field, "field_type", "string")
-    if field_type == "email":
-        return "EmailStr", ["EmailStr"], True
-    if field_type == "int":
-        return "int", [], False
-    if field_type == "float":
-        return "float", [], False
-    if field_type == "date":
-        return "date", ["date"], False
-    if field_type == "boolean":
-        return "bool", [], False
-    if field_type == "select":
-        options = getattr(field, "options", []) or []
-        if options:
-            literal_opts = ", ".join(_py_repr(o) for o in options)
-            return f"Literal[{literal_opts}]", ["Literal"], False
-        return "str", [], True
-    return "str", [], True
+# Estructuras de datos del AST semántico
 
-# Construcción del modelo Pydantic
+class FieldInfo:
+    def __init__(self, name, line):
+        self.name = name
+        self.line = line
+        self.field_type = None
+        self.props_seen = set()
+        self.min_length = None
+        self.max_length = None
+        self.min_val = None
+        self.max_val = None
+        self.default_val = None
+        self.default_val_kind = None
+        self.options = []
+        self.is_hidden = False
+        self.is_readonly = False
+        self.is_required = False
+        self.label = None
+        self.placeholder = None
+        self.icon = None
 
-def _build_model(form) -> tuple[list[str], list[str]]:
-    imports = {"Any"}
-    lines = []
 
-    model_name = f"{_pascal_case(form.name)}Payload"
-    lines.append(f"class {model_name}(BaseModel):")
-    lines.append('    model_config = {"extra": "forbid"}')
-    lines.append("")
+class FormInfo:
+    def __init__(self, name, line):
+        self.name = name
+        self.line = line
+        self.attrs_seen = set()
+        self.theme = None
+        self.layout = None
+        self.size = None
+        self.sections = []
 
-    all_fields = [field for section in form.sections for field in section.fields]
-    if not all_fields:
-        lines.append("    pass")
-        return lines, sorted(imports)
 
-    for field in all_fields:
-        field_name = field.name
-        py_type, needed_imports, is_text = _make_type_for_field(field)
-        imports.update(needed_imports)
+class SectionInfo:
+    def __init__(self, name, line):
+        self.name = name
+        self.line = line
+        self.fields = []
 
-        default_expr = "..."
-        is_required = getattr(field, "is_required", False)
-        default_val = getattr(field, "default_val", None)
-        if default_val is not None:
-            default_expr = _py_repr(default_val)
-            is_required = False
-        elif not is_required:
-            py_type = f"{py_type} | None"
-            default_expr = "None"
 
-        field_args = []
-        label = getattr(field, "label", None)
-        placeholder = getattr(field, "placeholder", None)
-        min_length = getattr(field, "min_length", None)
-        max_length = getattr(field, "max_length", None)
-        min_val = getattr(field, "min_val", None)
-        max_val = getattr(field, "max_val", None)
+class OnSubmitInfo:
+    def __init__(self):
+        self.method = None
+        self.url = None
+        self.success_msg = None
+        self.success_url = None
+        self.error_msg = None
 
-        if label:
-            field_args.append(f"title={_py_repr(label)}")
-        if placeholder:
-            field_args.append(f"description={_py_repr(f'Placeholder: {placeholder}')}")
+    def __repr__(self):
+        return (f"OnSubmitInfo(method={self.method!r}, url={self.url!r}, "
+                f"success_msg={self.success_msg!r}, success_url={self.success_url!r}, "
+                f"error_msg={self.error_msg!r})")
 
-        if is_text:
-            if min_length is not None:
-                field_args.append(f"min_length={min_length}")
-            if max_length is not None:
-                field_args.append(f"max_length={max_length}")
+# Clases de reporte
+
+class SemanticError:
+    def __init__(self, line, message):
+        self.line = line
+        self.message = message
+
+    def __str__(self):
+        return f"  \u274c [L\u00ednea {self.line}] ERROR: {self.message}"
+
+
+class SemanticWarning:
+    def __init__(self, line, message):
+        self.line = line
+        self.message = message
+
+    def __str__(self):
+        return f"  \u26a0\ufe0f  [L\u00ednea {self.line}] ADVERTENCIA: {self.message}"
+
+# Analizador semántico — listener sobre el árbol ANTLR
+
+class SemanticAnalyzer(FormGenParserListener):
+
+    def __init__(self):
+        self.errors = []
+        self.warnings = []
+        self._form = None
+        self._current_section = None
+        self._current_field = None
+        self._field_names_in_section = set()
+        self._section_names = set()
+        self._on_submit = None
+
+    def _error(self, ctx, msg):
+        line = ctx.start.line if hasattr(ctx, 'start') else 0
+        self.errors.append(SemanticError(line, msg))
+
+    def _warn(self, ctx, msg):
+        line = ctx.start.line if hasattr(ctx, 'start') else 0
+        self.warnings.append(SemanticWarning(line, msg))
+
+    def _strip_quotes(self, text):
+        if text and text.startswith('"') and text.endswith('"'):
+            return text[1:-1]
+        return text
+
+    # form_def
+
+    def enterForm_def(self, ctx: FormGenParser.Form_defContext):
+        self._form = FormInfo(ctx.identifier().getText(), ctx.start.line)
+
+    def exitForm_def(self, ctx: FormGenParser.Form_defContext):
+        if 'title' not in self._form.attrs_seen:
+            self._warn(ctx, f"El formulario '{self._form.name}' no tiene atributo 'title'.")
+
+    def enterForm_attr(self, ctx: FormGenParser.Form_attrContext):
+        if ctx.TITLE():
+            attr = 'title'
+        elif ctx.THEME():
+            attr = 'theme'
+        elif ctx.SUBMIT():
+            attr = 'submit'
+        elif ctx.CANCEL():
+            attr = 'cancel'
+        elif ctx.LAYOUT():
+            attr = 'layout'
+        elif ctx.SIZE():
+            attr = 'size'
         else:
-            if min_val is not None:
-                field_args.append(f"ge={min_val}")
-            if max_val is not None:
-                field_args.append(f"le={max_val}")
+            return
 
-        schema_extra = {}
-        if getattr(field, "is_unique", False):
-            schema_extra["unique"] = True
-        if getattr(field, "is_hidden", False):
-            schema_extra["hidden"] = True
-        if getattr(field, "is_readonly", False):
-            schema_extra["readonly"] = True
-        if schema_extra:
-            field_args.append(f"json_schema_extra={_py_repr(schema_extra)}")
+        if attr in self._form.attrs_seen:
+            self._error(ctx, f"Atributo de formulario '{attr}' declarado m\u00e1s de una vez.")
+        self._form.attrs_seen.add(attr)
 
-        args_suffix = ""
-        if field_args:
-            args_suffix = ", " + ", ".join(field_args)
+        if ctx.THEME() and ctx.theme_value():
+            val = self._strip_quotes(ctx.theme_value().getText())
+            if val not in VALID_THEMES:
+                self._error(ctx, f"Tema inv\u00e1lido: '{val}'. V\u00e1lidos: {sorted(VALID_THEMES)}.")
+            self._form.theme = val
 
-        lines.append(f"    {field_name}: {py_type} = Field({default_expr}{args_suffix})")
+        if ctx.LAYOUT() and ctx.layout_value():
+            val = self._strip_quotes(ctx.layout_value().getText())
+            if val not in VALID_LAYOUTS:
+                self._error(ctx, f"Layout inv\u00e1lido: '{val}'. V\u00e1lidos: {sorted(VALID_LAYOUTS)}.")
+            self._form.layout = val
 
-    return lines, sorted(imports)
+        if ctx.SIZE() and ctx.size_value():
+            val = self._strip_quotes(ctx.size_value().getText())
+            if val not in VALID_SIZES:
+                self._error(ctx, f"Tama\u00f1o inv\u00e1lido: '{val}'. V\u00e1lidos: {sorted(VALID_SIZES)}.")
+            self._form.size = val
 
-# Generación del archivo Python completo
+    # on_submit
 
-def generate(result: dict, source_filename: str = "") -> str:
-    if not result.get("ok"):
-        raise ValueError("No se puede generar FastAPI: el análisis semántico reportó errores.")
+    def enterOn_submit(self, ctx: FormGenParser.On_submitContext):
+        info = OnSubmitInfo()
 
-    form = result.get("form")
-    if form is None:
-        raise ValueError("El resultado no contiene información de formulario.")
+        http_ctx = ctx.http_action()
+        if http_ctx:
+            method_ctx = http_ctx.http_method()
+            if method_ctx:
+                info.method = method_ctx.getText()
+                if info.method not in VALID_HTTP_METHODS:
+                    self._error(ctx,
+                        f"M\u00e9todo HTTP inv\u00e1lido: '{info.method}'. "
+                        f"V\u00e1lidos: {sorted(VALID_HTTP_METHODS)}.")
 
-    _os = result.get("on_submit")
-    if _os is None:
-        on_submit = {}
-    elif isinstance(_os, dict):
-        on_submit = _os
-    else:
-        on_submit = {
-            "method":      getattr(_os, "method",      None),
-            "url":         getattr(_os, "url",         None),
-            "success_msg": getattr(_os, "success_msg", None),
-            "error_msg":   getattr(_os, "error_msg",   None),
-            "success_url": getattr(_os, "success_url", None),
+            url_token = http_ctx.URL_PATH()
+            if url_token:
+                info.url = url_token.getText()
+
+        success_ctx = ctx.success_clause()
+        if success_ctx:
+            str_token = success_ctx.STRING()
+            if str_token:
+                info.success_msg = self._strip_quotes(str_token.getText())
+            arrow_ctx = success_ctx.arrow_action()
+            if arrow_ctx:
+                url_token = arrow_ctx.URL_PATH()
+                if url_token:
+                    info.success_url = url_token.getText()
+
+        error_ctx = ctx.error_clause()
+        if error_ctx:
+            str_token = error_ctx.STRING()
+            if str_token:
+                info.error_msg = self._strip_quotes(str_token.getText())
+
+        if not info.method:
+            self._error(ctx, "El bloque 'on_submit' no especifica un m\u00e9todo HTTP (POST/GET).")
+        if not info.url:
+            self._error(ctx, "El bloque 'on_submit' no especifica una URL de destino.")
+        if not info.success_msg:
+            self._warn(ctx, "El bloque 'on_submit' no tiene mensaje de \u00e9xito definido.")
+        if not info.error_msg:
+            self._warn(ctx, "El bloque 'on_submit' no tiene mensaje de error definido.")
+
+        self._on_submit = info
+
+    # section
+
+    def enterSection(self, ctx: FormGenParser.SectionContext):
+        name = ctx.identifier().getText()
+        if name in self._section_names:
+            self._error(ctx, f"Secci\u00f3n '{name}' duplicada en el formulario.")
+        self._section_names.add(name)
+        self._current_section = SectionInfo(name, ctx.start.line)
+        self._field_names_in_section = set()
+        if self._form:
+            self._form.sections.append(self._current_section)
+
+    def exitSection(self, ctx: FormGenParser.SectionContext):
+        if self._current_section and not self._current_section.fields:
+            self._warn(ctx, f"La secci\u00f3n '{self._current_section.name}' no contiene ning\u00fan campo.")
+
+    # field
+
+    def enterField(self, ctx: FormGenParser.FieldContext):
+        name = ctx.identifier().getText()
+        if name in self._field_names_in_section:
+            self._error(ctx, f"Campo '{name}' duplicado en la secci\u00f3n '{self._current_section.name}'.")
+        self._field_names_in_section.add(name)
+        self._current_field = FieldInfo(name, ctx.start.line)
+        if self._current_section:
+            self._current_section.fields.append(self._current_field)
+
+    def exitField(self, ctx: FormGenParser.FieldContext):
+        f = self._current_field
+        if not f:
+            return
+
+        if f.field_type is None:
+            self._error(ctx, f"El campo '{f.name}' no tiene propiedad 'type'.")
+            return
+
+        allowed = VALID_PROPS_BY_TYPE.get(f.field_type, set())
+
+        if f.field_type in REQUIRES_OPTIONS and "options" not in f.props_seen:
+            self._error(ctx, f"El campo '{f.name}' es de tipo 'select' y le falta 'options'.")
+
+        if f.field_type in FORBIDS_OPTIONS and "options" in f.props_seen:
+            self._error(ctx, f"El campo '{f.name}' es de tipo '{f.field_type}' y no puede tener 'options'.")
+
+        for prop in f.props_seen:
+            if prop not in allowed:
+                self._error(ctx, f"La propiedad '{prop}' no es v\u00e1lida para el tipo '{f.field_type}' (campo '{f.name}').")
+
+        text_types = {"string", "email", "password", "textarea"}
+        if (("min_length" in f.props_seen or "max_length" in f.props_seen)
+                and f.field_type not in text_types):
+            self._error(ctx, f"'min_length'/'max_length' solo aplica a tipos de texto (campo '{f.name}', tipo '{f.field_type}').")
+
+        if f.min_length is not None and f.max_length is not None:
+            if f.min_length > f.max_length:
+                self._error(ctx, f"'min_length' ({f.min_length}) > 'max_length' ({f.max_length}) en el campo '{f.name}'.")
+
+        if f.min_val is not None and f.max_val is not None:
+            if f.min_val > f.max_val:
+                self._error(ctx, f"'min' ({f.min_val}) > 'max' ({f.max_val}) en el campo '{f.name}'.")
+
+        if f.default_val is not None and f.default_val_kind is not None:
+            expected = DEFAULT_VALUE_TYPE.get(f.field_type)
+            actual = f.default_val_kind
+            ok = (expected == actual) or (expected == "number" and actual in ("integer", "float"))
+            if not ok:
+                self._error(ctx, f"El valor 'default' del campo '{f.name}' deber\u00eda ser de tipo '{expected}' pero se encontr\u00f3 '{actual}'.")
+
+        if f.is_hidden and f.is_required:
+            self._warn(ctx, f"El campo '{f.name}' es 'hidden' y 'required' al mismo tiempo.")
+
+        if f.is_readonly and f.is_required:
+            self._warn(ctx, f"El campo '{f.name}' es 'readonly' y 'required'.")
+
+        if f.min_length == 0:
+            self._warn(ctx, f"'min_length: 0' en el campo '{f.name}' no tiene efecto.")
+
+        if f.field_type == "select" and len(f.options) < 2:
+            self._warn(ctx, f"El campo 'select' '{f.name}' tiene menos de 2 opciones ({len(f.options)}).")
+
+    def enterField_prop(self, ctx: FormGenParser.Field_propContext):
+        f = self._current_field
+        if not f:
+            return
+
+        if ctx.TYPE():
+            if ctx.field_type():
+                ft = ctx.field_type().getText()
+                if ft in VALID_FIELD_TYPES:
+                    f.field_type = ft
+                else:
+                    self._error(ctx, f"Tipo de campo desconocido: '{ft}'.")
+            return
+
+        prop_map = {
+            'LABEL': 'label', 'PLACEHOLDER': 'placeholder',
+            'REQUIRED': 'required', 'UNIQUE': 'unique',
+            'READONLY': 'readonly', 'FIELD_HIDDEN': 'hidden',
+            'DEFAULT': 'default', 'MIN_LENGTH': 'min_length',
+            'MAX_LENGTH': 'max_length', 'MIN': 'min',
+            'MAX': 'max', 'OPTIONS': 'options', 'ICON': 'icon',
         }
 
-    method = (on_submit.get("method") or "POST").upper()
-    if method not in {"GET", "POST"}:
-        method = "POST"
-    submit_url = on_submit.get("url") or "/api/submit"
-    success_msg = on_submit.get("success_msg") or "Operación exitosa"
-    error_msg = on_submit.get("error_msg") or "Error al procesar"
-    success_url = on_submit.get("success_url")
+        prop_name = None
+        for token_attr, name in prop_map.items():
+            if getattr(ctx, token_attr, lambda: None)():
+                prop_name = name
+                break
 
-    model_lines, import_names = _build_model(form)
-    model_name = f"{_pascal_case(form.name)}Payload"
-    handler_name = _snake_case(form.name)
-    decorator = "get" if method == "GET" else "post"
+        if prop_name is None:
+            return
 
-    base = os.path.basename(source_filename) if source_filename else "formulario.fg"
-    out = []
-    out.append(f"# Generado automáticamente por FormGem - fuente: {base}")
-    out.append("# Backend FastAPI")
-    out.append("")
-    out.append("from typing import Any")
-    if "Literal" in import_names:
-        out.append("from typing import Literal")
-    if "date" in import_names:
-        out.append("from datetime import date")
-    out.append("from fastapi import Body, FastAPI, HTTPException")
-    if "EmailStr" in import_names:
-        out.append("from pydantic import BaseModel, EmailStr, Field")
+        if prop_name in f.props_seen:
+            self._error(ctx, f"Propiedad '{prop_name}' duplicada en el campo '{f.name}'.")
+        f.props_seen.add(prop_name)
+
+        if prop_name == 'required':
+            f.is_required = True
+        elif prop_name == 'hidden':
+            f.is_hidden = True
+        elif prop_name == 'readonly':
+            f.is_readonly = True
+        elif prop_name == 'min_length':
+            try:
+                f.min_length = int(ctx.INTEGER().getText())
+            except (AttributeError, ValueError):
+                pass
+        elif prop_name == 'max_length':
+            try:
+                f.max_length = int(ctx.INTEGER().getText())
+            except (AttributeError, ValueError):
+                pass
+        elif prop_name == 'min':
+            if ctx.number():
+                try:
+                    f.min_val = float(ctx.number().getText())
+                except ValueError:
+                    pass
+        elif prop_name == 'max':
+            if ctx.number():
+                try:
+                    f.max_val = float(ctx.number().getText())
+                except ValueError:
+                    pass
+        elif prop_name == 'default':
+            if ctx.value():
+                v = ctx.value()
+                if v.STRING():
+                    f.default_val = self._strip_quotes(v.STRING().getText())
+                    f.default_val_kind = 'string'
+                elif v.FLOAT():
+                    f.default_val = float(v.FLOAT().getText())
+                    f.default_val_kind = 'float'
+                elif v.INTEGER():
+                    f.default_val = int(v.INTEGER().getText())
+                    f.default_val_kind = 'integer'
+                elif v.boolean_val():
+                    f.default_val = v.boolean_val().getText()
+                    f.default_val_kind = 'boolean'
+        elif prop_name == 'label':
+            if ctx.STRING():
+                f.label = self._strip_quotes(ctx.STRING().getText())
+        elif prop_name == 'placeholder':
+            if ctx.STRING():
+                f.placeholder = self._strip_quotes(ctx.STRING().getText())
+        elif prop_name == 'options':
+            if ctx.option_list():
+                strings = ctx.option_list().STRING()
+                f.options = [self._strip_quotes(s.getText()) for s in strings]
+                seen_opts = set()
+                for opt in f.options:
+                    if opt in seen_opts:
+                        self._warn(ctx, f"Opci\u00f3n duplicada '{opt}' en el campo '{f.name}'.")
+                    seen_opts.add(opt)
+        elif prop_name == 'icon':
+            if ctx.icon_value():
+                icon = ctx.icon_value().getText()
+                if icon not in VALID_ICONS:
+                    self._error(ctx, f"\u00cdcono desconocido: '{icon}' en campo '{f.name}'. V\u00e1lidos: {sorted(VALID_ICONS)}.")
+                else:
+                    f.icon = icon
+
+# API pública: analyze() y print_report()
+
+def analyze(filepath: str) -> dict:
+    input_stream = FileStream(filepath, encoding='utf-8')
+    lexer = FormGenLexer(input_stream)
+    stream = CommonTokenStream(lexer)
+    parser = FormGenParser(stream)
+    tree = parser.program()
+
+    if parser.getNumberOfSyntaxErrors() > 0:
+        return {
+            'ok': False,
+            'errors': [SemanticError(0, f"{parser.getNumberOfSyntaxErrors()} error(es) sint\u00e1ctico(s).")],
+            'warnings': [],
+            'form': None,
+            'on_submit': None,
+        }
+
+    analyzer = SemanticAnalyzer()
+    walker = ParseTreeWalker()
+    walker.walk(analyzer, tree)
+
+    return {
+        'ok': len(analyzer.errors) == 0,
+        'errors': analyzer.errors,
+        'warnings': analyzer.warnings,
+        'form': analyzer._form,
+        'on_submit': analyzer._on_submit,
+    }
+
+
+def print_report(result: dict, filepath: str):
+    print("=" * 60)
+    print(f"  AN\u00c1LISIS SEM\u00c1NTICO \u2014 {os.path.basename(filepath)}")
+    print("=" * 60)
+
+    form = result['form']
+    if form:
+        print(f"\n  Formulario : {form.name}")
+        print(f"  Secciones  : {len(form.sections)}")
+        print(f"  Campos     : {sum(len(s.fields) for s in form.sections)}")
+
+    on_submit = result.get('on_submit')
+    if on_submit:
+        redirect = f" \u2192 redirect {on_submit.success_url}" if on_submit.success_url else ""
+        print(f"  on_submit  : {on_submit.method} {on_submit.url}{redirect}")
+
+    print()
+    if result['errors']:
+        print(f"  Errores sem\u00e1nticos ({len(result['errors'])}):")
+        for e in result['errors']:
+            print(str(e))
     else:
-        out.append("from pydantic import BaseModel, Field")
-    out.append("")
-    _form_title = getattr(form, "title", None) or getattr(form, "name", None) or "FormGem API"
-    out.append(f'app = FastAPI(title={_py_repr(_form_title)})')
-    out.append("")
-    out.extend(model_lines)
-    out.append("")
-    out.append("class SubmitResponse(BaseModel):")
-    out.append("    ok: bool")
-    out.append("    message: str")
-    out.append("    redirect_to: str | None = None")
-    out.append("    data: dict[str, Any] | None = None")
-    out.append("")
-    out.append('@app.get("/health", tags=["health"])')
-    out.append("async def health() -> dict[str, str]:")
-    out.append('    return {"status": "ok"}')
-    out.append("")
-    out.append(f'@app.{decorator}("{submit_url}", response_model=SubmitResponse, tags=["{form.name}"])')
-    out.append(f"async def {handler_name}(payload: {model_name} = Body(...)) -> SubmitResponse:")
-    out.append("    try:")
-    out.append("        data = payload.model_dump()")
-    out.append("        # TODO: conectar persistencia / reglas de negocio (por ejemplo, unique en BD).")
-    out.append(f"        return SubmitResponse(ok=True, message={_py_repr(success_msg)}, redirect_to={_py_repr(success_url)}, data=data)")
-    out.append("    except Exception as exc:")
-    out.append(f"        raise HTTPException(status_code=400, detail={_py_repr(error_msg)} + ': ' + str(exc)) from exc")
-    out.append("")
-    out.append('if __name__ == "__main__":')
-    out.append("    import uvicorn")
-    out.append('    uvicorn.run(app, host="127.0.0.1", port=8000)')
-    out.append("")
-    return "\n".join(out)
+        print("  \u2705 Sin errores sem\u00e1nticos")
+
+    print()
+    if result['warnings']:
+        print(f"  Advertencias ({len(result['warnings'])}):")
+        for w in result['warnings']:
+            print(str(w))
+    else:
+        print("  \u2705 Sin advertencias")
+
+    print()
+    estado = '✅ VÁLIDO' if result['ok'] else '❌ INVÁLIDO'
+    print(f"  Estado: {estado}")
+    print("=" * 60)
